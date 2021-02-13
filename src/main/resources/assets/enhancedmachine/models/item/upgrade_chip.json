@@ -1,0 +1,7 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "enhancedmachine:items/chip_base",
+        "layer1": "enhancedmachine:items/chip_die"
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "group": "enhancedmachine:upgrade_chip",
+    "result": {
+        "item": "enhancedmachine:upgrade_chip",
+        "count": 1,
+        "nbt": {
+            "Upgrade": {
+                "id": "exceptional",
+                "level": 1
+            }
+        }
+    },
+    "key": {
+        "i": {
+            "item": "minecraft:gold_ingot"
+        },
+        "n": {
+            "item": "minecraft:gold_nugget"
+        },
+        "s": {
+            "item": "minecraft:quartz"
+        }
+    },
+    "pattern": [
+        "nin",
+        "sss"
+    ]
+}

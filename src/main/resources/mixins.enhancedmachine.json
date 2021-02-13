@@ -1,0 +1,43 @@
+{
+    "required": true,
+    "package": "io.github.cvrunmin.enhancedmachine.mixin",
+    "compatibilityLevel": "JAVA_8",
+    "refmap": "enhancedmachine.refmap.json",
+    "minVersion": "0.8",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "client": [
+        "gui.AbstractFurnaceScreenMixin",
+        "gui.DispenserScreenMixin",
+        "gui.BrewingStandScreenMixin",
+        "FurnaceRecipeMixins$AbstractRecipeBookGuiMixin",
+        "FurnaceRecipeMixins$RecipeBookGuiInvoker",
+        "gui.FontRendererMixin"
+    ],
+    "mixins": [
+        "block.AbstractFurnaceBlockMixin",
+        "inventory.AbstractFurnaceContainerMixin",
+        "tileentity.AbstractFurnaceTileEntityMixin",
+
+        "tileentity.CreateMenuInvokerMixin",
+        "inventory.BrewingStandContainerAccessor",
+        "block.ForgeBlockMixin",
+        "block.FurnaceBlocksMixin",
+        "FurnaceRecipeMixins$FurnaceRecipePlacerMixin",
+        "tileentity.TileEntityAccessorMixin",
+        "inventory.DispenserContainerMixin",
+        "tileentity.DispenserTileEntityMixin",
+        "tileentity.BrewingStandTileEntityMixin",
+        "tileentity.ChestTileEntityMixin",
+        "block.BrewingStandBlockMixin",
+        "block.DispenserBlockMixin",
+        "GameRuleTypeInvoker",
+        "PlayerListMixin",
+        "FurnaceRecipeMixins$ServerRecipePlacerMixin",
+        "GameRulesMixin",
+        "inventory.BrewingStandContainerMixin",
+        "inventory.FurnaceContainersMixin",
+        "inventory.ContainerAccessor"
+    ]
+}

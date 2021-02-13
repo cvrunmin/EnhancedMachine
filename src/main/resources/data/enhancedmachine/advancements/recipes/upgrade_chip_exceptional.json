@@ -1,0 +1,43 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "enhancedmachine:upgrade_chip_exceptional"
+    ]
+  },
+  "criteria": {
+    "has_chip": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "enhancedmachine:upgrade_chip"
+          }
+        ]
+      }
+    },
+    "has_chipwriter": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "enhancedmachine:chipwriter"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "enhancedmachine:upgrade_chip_exceptional"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_chip",
+      "has_chipwriter",
+      "has_the_recipe"
+    ]
+  ]
+}
