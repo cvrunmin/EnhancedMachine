@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("OverwriteAuthorRequired")
 @Mixin(DispenserTileEntity.class)
-public abstract class DispenserTileEntityMixin extends TileEntity implements IHyperthreadable, ITickableTileEntity {
+public abstract class DispenserTileEntityMixin extends LockableLootTileEntity implements IHyperthreadable, ITickableTileEntity {
     IUpgradeSlot upgradeSlot = CapabilityUpgradeSlot.UPGRADE_SLOT.getDefaultInstance();
     @Shadow
     private NonNullList<ItemStack> stacks;
@@ -63,25 +63,25 @@ public abstract class DispenserTileEntityMixin extends TileEntity implements IHy
         nbt.put("Upgrades", CapabilityUpgradeSlot.UPGRADE_SLOT.writeNBT(upgradeSlot, null));
     }
 
-    @Override
-    public CompoundNBT getUpdateTag() {
-        CompoundNBT nbt = ((TileEntityAccessorMixin) this).invokeWriteInternal(new CompoundNBT());
-        nbt.put("Upgrades", CapabilityUpgradeSlot.UPGRADE_SLOT.writeNBT(upgradeSlot, null));
-        return nbt;
-    }
+//    @Override
+//    public CompoundNBT getUpdateTag() {
+//        CompoundNBT nbt = ((TileEntityAccessorMixin) this).invokeWriteInternal(new CompoundNBT());
+//        nbt.put("Upgrades", CapabilityUpgradeSlot.UPGRADE_SLOT.writeNBT(upgradeSlot, null));
+//        return nbt;
+//    }
 
-    @Override
-    public SUpdateTileEntityPacket getUpdatePacket() {
-        return new SUpdateTileEntityPacket(this.pos, 3, this.getUpdateTag());
-    }
+//    @Override
+//    public SUpdateTileEntityPacket getUpdatePacket() {
+//        return new SUpdateTileEntityPacket(this.pos, 3, this.getUpdateTag());
+//    }
 
 //    @Overwrite(remap = false)
 
-    @Override
-    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        super.onDataPacket(net, pkt);
-        handleUpdateTag(pkt.getNbtCompound());
-    }
+//    @Override
+//    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
+//        super.onDataPacket(net, pkt);
+//        handleUpdateTag(pkt.getNbtCompound());
+//    }
 
     @Override
     public void tick() {

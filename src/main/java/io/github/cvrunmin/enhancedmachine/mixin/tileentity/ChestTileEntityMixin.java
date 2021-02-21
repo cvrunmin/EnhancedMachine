@@ -43,11 +43,17 @@ public abstract class ChestTileEntityMixin extends LockableLootTileEntity {
         nbt.put("Upgrades", CapabilityUpgradeSlot.UPGRADE_SLOT.writeNBT(upgradeSlot, null));
     }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+    @Inject(method = "getCapability", at = @At("HEAD"), remap = false, cancellable = true)
+    private <T> void injectGetCap(Capability<T> capability, @Nullable Direction facing, CallbackInfoReturnable<LazyOptional<T>> ci){
         if (capability == CapabilityUpgradeSlot.UPGRADE_SLOT) {
-            return LazyOptional.of(() -> upgradeSlot).cast();
+            ci.setReturnValue(LazyOptional.of(() -> upgradeSlot).cast());
         }
-        return super.getCapability(capability, facing);
     }
+//    @Override
+//    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+//        if (capability == CapabilityUpgradeSlot.UPGRADE_SLOT) {
+//            return LazyOptional.of(() -> upgradeSlot).cast();
+//        }
+//        return super.getCapability(capability, facing);
+//    }
 }

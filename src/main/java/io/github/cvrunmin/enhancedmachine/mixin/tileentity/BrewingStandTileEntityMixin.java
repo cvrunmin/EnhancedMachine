@@ -62,13 +62,19 @@ public abstract class BrewingStandTileEntityMixin extends TileEntity implements 
         upgradeSlot.setHolder((BrewingStandTileEntity)(Object)this);
     }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+    @Inject(method = "getCapability", at = @At("HEAD"), remap = false, cancellable = true)
+    private <T> void injectGetCap(Capability<T> capability, @Nullable Direction facing, CallbackInfoReturnable<LazyOptional<T>> ci){
         if (capability == CapabilityUpgradeSlot.UPGRADE_SLOT) {
-            return LazyOptional.of(() -> upgradeSlot).cast();
+            ci.setReturnValue(LazyOptional.of(() -> upgradeSlot).cast());
         }
-        return super.getCapability(capability, facing);
     }
+//    @Override
+//    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+//        if (capability == CapabilityUpgradeSlot.UPGRADE_SLOT) {
+//            return LazyOptional.of(() -> upgradeSlot).cast();
+//        }
+//        return super.getCapability(capability, facing);
+//    }
 
     @Inject(method = "read", at = @At(value = "TAIL"))
     public void afterReadNBT(CompoundNBT nbt, CallbackInfo info){

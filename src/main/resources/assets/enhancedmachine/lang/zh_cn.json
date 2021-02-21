@@ -44,7 +44,7 @@
     "upgrade.type.time_acceleration.func.1": "加速烧炼时间至原本的%.2f%%",
     "upgrade.type.time_acceleration.func.2": "加快燃料燃烧时间至原本的%.2f%%",
     "upgrade.type.fuel_mastery": "燃料精通",
-    "upgrade.type.fuel_mastery.desc": "那可真是能发挥最大价值的燃料修来的“福报”啊",
+    "upgrade.type.fuel_mastery.desc": "能发挥燃料的最大价值",
     "upgrade.type.fuel_mastery.func.brewing_stand": "每份%s可酿造药水%d次",
     "upgrade.type.fuel_mastery.func": "延长燃料燃烧时间至原本的%.2f%%",
     "upgrade.type.hyperthread": "超线程",

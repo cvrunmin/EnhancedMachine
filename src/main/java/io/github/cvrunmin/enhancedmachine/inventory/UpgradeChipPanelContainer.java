@@ -49,6 +49,10 @@ public class UpgradeChipPanelContainer extends Container {
             playerSlots.add(new Slot(playerInventory, k, 8 + k * 18, 197));
         }
         focusedNode = cap.getUpgrades().getRoot();
+        if(focusedNode == null){
+            focusedNode = new UpgradeNode(new UpgradeDetail(Upgrades.EMPTY, 1));
+            cap.getUpgrades().setRoot(focusedNode);
+        }
         focusedSlot.set(0);
         trackInt(focusedSlot);
         packUpgradeSlots();

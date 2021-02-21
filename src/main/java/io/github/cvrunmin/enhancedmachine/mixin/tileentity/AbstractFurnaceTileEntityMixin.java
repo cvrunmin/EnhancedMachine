@@ -223,19 +223,26 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
         return isBurning();
     }
 
+    private boolean freeEnergyBurnFlag = false;
+
     private boolean wasBurning(){
-        return isBurning() || (isBurningCheckFreeEnergy() && canSmelt()) && burnTime == -1;
+        return isBurning() || freeEnergyBurnFlag;
     }
 
     private boolean isBurningCheckFreeEnergy(){
+        if (canUseFreeEnergy()) return true;
+
+        return isFuelBurning();
+    }
+
+    private boolean canUseFreeEnergy() {
         if(upgradeSlot.hasUpgradeInstalled(Upgrades.FREE_ENERGY)){
             UpgradeNode node = upgradeSlot.getFirstFoundUpgrade(Upgrades.FREE_ENERGY);
             if (node.getParent() == null || !EMConfig.isBanned(node.getParent().getUpgrade(), world != null && world.isRemote ? ServerConfigHelper.getSyncBannedUpgrade() : EMConfig.getBannedUpgradesParsed())) {
                 return true;
             }
         }
-
-        return isFuelBurning();
+        return false;
     }
 
     @Overwrite
@@ -249,7 +256,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
         if (!this.world.isRemote) {
             ItemStack itemstack = this.items.get(1);
             if (this.isBurningCheckFreeEnergy() || !itemstack.isEmpty() && isInputReady()) {
-                if (!this.isBurningCheckFreeEnergy() && this.canSmelt()) {
+                if (!this.isFuelBurning() && !this.canUseFreeEnergy() && this.canSmelt()) {
                     this.burnTime = this.getBurnTime(itemstack);
                     this.recipesUsed = this.burnTime;
                     if (this.isBurning()) {
@@ -268,8 +275,8 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
                 }
 
                 if (this.isBurningCheckFreeEnergy() && this.canSmelt()) {
-                    if(this.isBurningCheckFreeEnergy() && ! this.isBurning() && burnTime != -1){
-                        burnTime = -1;
+                    if(this.isBurningCheckFreeEnergy() && ! this.isBurning() && !freeEnergyBurnFlag){
+                        freeEnergyBurnFlag = true;
                     }
                     ++this.cookTime;
                     if (this.cookTime == this.cookTimeTotal) {
@@ -279,13 +286,14 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
                         flag1 = true;
                     }
                 } else {
+                    freeEnergyBurnFlag = false;
                     this.cookTime = 0;
                 }
             } else if (!this.isBurningCheckFreeEnergy() && this.cookTime > 0) {
                 this.cookTime = MathHelper.clamp(this.cookTime - 2, 0, this.cookTimeTotal);
             }
 
-            boolean burning = this.isBurning() || (isBurningCheckFreeEnergy() && canSmelt());
+            boolean burning = this.isBurning() || freeEnergyBurnFlag;
             if (flag != burning) {
                 flag1 = true;
                 this.world.setBlockState(this.pos, this.world.getBlockState(this.pos).with(AbstractFurnaceBlock.LIT, burning), 3);
@@ -321,20 +329,39 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
             if (itemstack.isEmpty()) {
                 return false;
             } else {
-                ItemStack itemstack1 = this.items.get(outputSlot);
-                if (itemstack1.isEmpty()) {
-                    return true;
-                } else if (!itemstack1.isItemEqual(itemstack)) {
-                    return false;
-                } else if (itemstack1.getCount() + itemstack.getCount() <= ((AbstractFurnaceTileEntity)(Object)this).getInventoryStackLimit() && itemstack1.getCount() + itemstack.getCount() <= itemstack1.getMaxStackSize()) { // Forge fix: make furnace respect stack sizes in furnace recipes
-                    return true;
-                } else {
-                    return itemstack1.getCount() + itemstack.getCount() <= itemstack.getMaxStackSize(); // Forge fix: make furnace respect stack sizes in furnace recipes
-                }
+                return getSuitableOutputSlot(recipeIn) != -1;
+//                ItemStack itemstack1 = this.items.get(outputSlot);
+//                if (itemstack1.isEmpty()) {
+//                    return true;
+//                } else if (!itemstack1.isItemEqual(itemstack)) {
+//                    return false;
+//                } else if (itemstack1.getCount() + itemstack.getCount() <= ((AbstractFurnaceTileEntity)(Object)this).getInventoryStackLimit() && itemstack1.getCount() + itemstack.getCount() <= itemstack1.getMaxStackSize()) { // Forge fix: make furnace respect stack sizes in furnace recipes
+//                    return true;
+//                } else {
+//                    return itemstack1.getCount() + itemstack.getCount() <= itemstack.getMaxStackSize(); // Forge fix: make furnace respect stack sizes in furnace recipes
+//                }
             }
         } else {
             return false;
         }
+    }
+
+    private int getSuitableOutputSlot(IRecipe<?> recipe){
+        ItemStack itemstack = recipe.getRecipeOutput();
+        for (int i = 0; i < getHyperthreadedSlotsCount(); i++) {
+            int outputSlot = 2 + 2 * i;
+            ItemStack itemstack1 = this.items.get(outputSlot);
+            if (itemstack1.isEmpty()) {
+                return outputSlot;
+            } else if (!itemstack1.isItemEqual(itemstack)) {
+                continue;
+            } else if (itemstack1.getCount() + itemstack.getCount() <= ((AbstractFurnaceTileEntity)(Object)this).getInventoryStackLimit() && itemstack1.getCount() + itemstack.getCount() <= itemstack1.getMaxStackSize()) { // Forge fix: make furnace respect stack sizes in furnace recipes
+                return outputSlot;
+            } else if (itemstack1.getCount() + itemstack.getCount() <= itemstack.getMaxStackSize()) {
+                return outputSlot;// Forge fix: make furnace respect stack sizes in furnace recipes
+            }
+        }
+        return -1;
     }
 
     private void smelt(){
@@ -348,7 +375,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
     private void smelt(@Nullable IRecipe<?> recipe, int pairSlot) {
         if (recipe != null && this.canSmelt(recipe, pairSlot)) {
             int inputSlot = pairSlot == 0 ? 0 : pairSlot * 2 + 1;
-            int outputSlot = 2 + 2 * pairSlot;
+            int outputSlot = getSuitableOutputSlot(recipe); //canSmelt already check if there is a suitable slot
             ItemStack itemstack = this.items.get(inputSlot);
             ItemStack itemstack1 = recipe.getRecipeOutput();
             ItemStack itemstack2 = this.items.get(outputSlot);
@@ -370,11 +397,18 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
         }
     }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+    @Inject(method = "getCapability", at = @At("HEAD"), remap = false, cancellable = true)
+    private <T> void injectGetCap(Capability<T> capability, @Nullable Direction facing, CallbackInfoReturnable<LazyOptional<T>> ci){
         if (capability == CapabilityUpgradeSlot.UPGRADE_SLOT) {
-            return LazyOptional.of(() -> upgradeSlot).cast();
+            ci.setReturnValue(LazyOptional.of(() -> upgradeSlot).cast());
         }
-        return super.getCapability(capability, facing);
     }
+
+//    @Override
+//    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+//        if (capability == CapabilityUpgradeSlot.UPGRADE_SLOT) {
+//            return LazyOptional.of(() -> upgradeSlot).cast();
+//        }
+//        return super.getCapability(capability, facing);
+//    }
 }
