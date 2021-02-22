@@ -18,7 +18,7 @@ apply plugin: 'maven-publish'
 
 version = "$modVersion"
 group = "io.github.cvrunmin" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "enchancedmachine"
+archivesBaseName = "enhancedmachine"
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
