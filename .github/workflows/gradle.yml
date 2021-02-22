@@ -38,8 +38,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: v${{ github.event.inputs.ver }}
+        release_name: Release ${{ github.event.inputs.ver }}
         draft: false
         prerelease: false
     - name: Upload Release Asset
