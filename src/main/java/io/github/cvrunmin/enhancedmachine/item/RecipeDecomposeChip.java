@@ -18,6 +18,12 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 
 public class RecipeDecomposeChip implements ICraftingRecipe {
+    private final ResourceLocation recipeId;
+
+    public RecipeDecomposeChip(ResourceLocation recipeId) {
+        this.recipeId = recipeId;
+    }
+
     @Override
     public boolean matches(CraftingInventory inv, World worldIn) {
         ItemStack retrievedStack = ItemStack.EMPTY;
@@ -25,7 +31,7 @@ public class RecipeDecomposeChip implements ICraftingRecipe {
         for (int i = 0; i < inv.getSizeInventory(); i++) {
             ItemStack itemstack = inv.getStackInSlot(i);
             if (!itemstack.isEmpty()) {
-                if (!itemstack.getItem().equals(EMItems.UPGRADE_CHIP)) {
+                if (!itemstack.getItem().equals(EMItems.UPGRADE_CHIP.get())) {
                     return false;
                 } else if (retrievedStack.isEmpty()) {
                     retrievedStack = itemstack;
@@ -42,7 +48,7 @@ public class RecipeDecomposeChip implements ICraftingRecipe {
             ItemStack itemstack = inv.getStackInSlot(i);
 
             if (!itemstack.isEmpty()) {
-                if (!itemstack.getItem().equals(EMItems.UPGRADE_CHIP)) {
+                if (!itemstack.getItem().equals(EMItems.UPGRADE_CHIP.get())) {
                     return ItemStack.EMPTY;
                 } else if (retrievedStack.isEmpty()) {
                     retrievedStack = itemstack;
@@ -81,7 +87,7 @@ public class RecipeDecomposeChip implements ICraftingRecipe {
 
     @Override
     public ResourceLocation getId() {
-        return new ResourceLocation(EnhancedMachine.MODID,"decompose_damaged_chip");
+        return recipeId;
     }
 
     @Override
@@ -90,15 +96,16 @@ public class RecipeDecomposeChip implements ICraftingRecipe {
     }
 
     public static class Serializer extends net.minecraftforge.registries.ForgeRegistryEntry<IRecipeSerializer<?>>  implements IRecipeSerializer<RecipeDecomposeChip> {
+
         @Override
         public RecipeDecomposeChip read(ResourceLocation recipeId, JsonObject json) {
-            return new RecipeDecomposeChip();
+            return new RecipeDecomposeChip(recipeId);
         }
 
         @Nullable
         @Override
         public RecipeDecomposeChip read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new RecipeDecomposeChip();
+            return new RecipeDecomposeChip(recipeId);
         }
 
         @Override
