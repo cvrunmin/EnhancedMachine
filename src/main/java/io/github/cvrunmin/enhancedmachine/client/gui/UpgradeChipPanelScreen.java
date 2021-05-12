@@ -152,7 +152,7 @@ public class UpgradeChipPanelScreen extends ContainerScreen<UpgradeChipPanelCont
                 int finalI = i;
                 addButton(new Button(guiLeft + slot.xPos + 2, guiTop + slot.yPos - 18, 12, 12, "-", but ->{
                     if(finalI < slots.size() - 36){
-                        int focusSlot = ((SlotUpgradeChip) slot).getUpgradeSlot().getUpgrade().getExtras().getInt("Slot");
+                        int focusSlot = ((SlotUpgradeChip) slot).getUpgradeSlotWrapper().getEid();
                         EnhancedMachine.CHANNEL.sendToServer(new FocusedUpgradeChipChangeMessage(focusSlot));
                     }
                 }));
@@ -161,7 +161,7 @@ public class UpgradeChipPanelScreen extends ContainerScreen<UpgradeChipPanelCont
                     int finalI = i;
                     addButton(new Button(guiLeft + (slot.xPos < 80 ? slot.xPos - 18 : slot.xPos + 18 + 4), guiTop + slot.yPos + 2, 12, 12, "+", but->{
                         if(finalI < slots.size() - 36){
-                            int focusSlot = ((SlotUpgradeChip) slot).getUpgradeSlot().getUpgrade().getExtras().getInt("Slot");
+                            int focusSlot = ((SlotUpgradeChip) slot).getUpgradeSlotWrapper().getEid();
                             EnhancedMachine.CHANNEL.sendToServer(new FocusedUpgradeChipChangeMessage(focusSlot));
                         }
                     }));

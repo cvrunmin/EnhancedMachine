@@ -3,7 +3,7 @@ package io.github.cvrunmin.enhancedmachine.inventory;
 import io.github.cvrunmin.enhancedmachine.EMConfig;
 import io.github.cvrunmin.enhancedmachine.ServerConfigHelper;
 import io.github.cvrunmin.enhancedmachine.cap.IUpgradeSlot;
-import io.github.cvrunmin.enhancedmachine.cap.SplitUpgrade;
+import io.github.cvrunmin.enhancedmachine.cap.SplitUpgradeNode;
 import io.github.cvrunmin.enhancedmachine.cap.UpgradeNode;
 import io.github.cvrunmin.enhancedmachine.cap.UpgradesCollection;
 import io.github.cvrunmin.enhancedmachine.tileentity.IHyperthreadable;
@@ -23,12 +23,18 @@ import java.util.List;
 public class SlotUpgradeChip extends Slot {
 
     private IUpgradeSlot cap;
+    private UpgradesCollection.UpgradeNodeWrapper upgradeSlotWrapper;
     private UpgradeNode upgradeSlot;
 
-    public SlotUpgradeChip(IInventory inventoryIn, int index, int xPosition, int yPosition, IUpgradeSlot cap, UpgradeNode upgradeSlot) {
+    public SlotUpgradeChip(IInventory inventoryIn, int index, int xPosition, int yPosition, IUpgradeSlot cap, UpgradesCollection.UpgradeNodeWrapper upgradeSlot) {
         super(inventoryIn, index, xPosition, yPosition);
         this.cap = cap;
-        this.upgradeSlot = upgradeSlot;
+        this.upgradeSlotWrapper = upgradeSlot;
+        this.upgradeSlot = upgradeSlot.getNode();
+    }
+
+    public UpgradesCollection.UpgradeNodeWrapper getUpgradeSlotWrapper() {
+        return upgradeSlotWrapper;
     }
 
     public UpgradeNode getUpgradeSlot() {
@@ -37,7 +43,7 @@ public class SlotUpgradeChip extends Slot {
 
     @Override
     public boolean canTakeStack(PlayerEntity playerIn) {
-        if (upgradeSlot instanceof SplitUpgrade && ((SplitUpgrade) upgradeSlot).getChildren().stream().anyMatch(node -> node != null && !node.getUpgrade().getType().equals(Upgrades.EMPTY))) {
+        if (upgradeSlot instanceof SplitUpgradeNode && ((SplitUpgradeNode) upgradeSlot).getChildren().stream().anyMatch(node -> node != null && !node.getUpgrade().getType().equals(Upgrades.EMPTY))) {
             return false;
         }
         if(isHyperthreadSlotOccupied()) return false;
@@ -73,7 +79,7 @@ public class SlotUpgradeChip extends Slot {
 //            list.add(TextFormatting.RED + I18n.format("enhancedmachine.config.general.bannedUpgrades.on"));
         }
         else {
-            if (upgradeSlot instanceof SplitUpgrade && ((SplitUpgrade) upgradeSlot).getChildren().stream().anyMatch(node -> node != null && !node.getUpgrade().getType().equals(Upgrades.EMPTY))) {
+            if (upgradeSlot instanceof SplitUpgradeNode && ((SplitUpgradeNode) upgradeSlot).getChildren().stream().anyMatch(node -> node != null && !node.getUpgrade().getType().equals(Upgrades.EMPTY))) {
                 list.add(TextFormatting.RED + I18n.format("upgrade.warning.containsChildren"));
             } else if (Upgrades.HYPERTHREAD.equals(upgradeSlot.getUpgrade().getType())) {
                 if (isHyperthreadSlotOccupied()) {

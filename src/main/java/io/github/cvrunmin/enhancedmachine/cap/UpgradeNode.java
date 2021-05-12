@@ -1,6 +1,7 @@
 package io.github.cvrunmin.enhancedmachine.cap;
 
 import io.github.cvrunmin.enhancedmachine.upgrade.UpgradeDetail;
+import io.github.cvrunmin.enhancedmachine.upgrade.UpgradeRiser;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -11,6 +12,13 @@ public class UpgradeNode implements Cloneable {
 
     public UpgradeNode(@Nonnull UpgradeDetail upgrade) {
         this.upgrade = upgrade;
+    }
+
+    public static UpgradeNode createNode(UpgradeDetail detail){
+        if(detail.getType() instanceof UpgradeRiser){
+            return new SplitUpgradeNode(detail);
+        }
+        return new UpgradeNode((detail));
     }
 
     public UpgradeDetail getUpgrade() {

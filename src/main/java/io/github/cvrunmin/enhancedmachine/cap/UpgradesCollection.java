@@ -1,11 +1,13 @@
 package io.github.cvrunmin.enhancedmachine.cap;
 
 import com.google.common.collect.Lists;
+import io.github.cvrunmin.enhancedmachine.EnhancedMachine;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrade;
 import io.github.cvrunmin.enhancedmachine.upgrade.UpgradeDetail;
 import io.github.cvrunmin.enhancedmachine.upgrade.UpgradeRiser;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrades;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,8 +42,8 @@ public class UpgradesCollection {
     private boolean hasUpgrade(UpgradeNode node, UpgradeDetail detail) {
         if (detail == null) return false;
         if (node.getUpgrade().equals(detail)) return true;
-        else if (node instanceof SplitUpgrade) {
-            for (UpgradeNode child : ((SplitUpgrade) node).getChildren()) {
+        else if (node instanceof SplitUpgradeNode) {
+            for (UpgradeNode child : ((SplitUpgradeNode) node).getChildren()) {
                 if (hasUpgrade(child, detail))
                     return true;
             }
@@ -60,8 +62,8 @@ public class UpgradesCollection {
         if (type == null) return false;
         if (node == null) return false;
         if (node.getUpgrade().getType().equals(type)) return true;
-        else if (node instanceof SplitUpgrade) {
-            for (UpgradeNode child : ((SplitUpgrade) node).getChildren()) {
+        else if (node instanceof SplitUpgradeNode) {
+            for (UpgradeNode child : ((SplitUpgradeNode) node).getChildren()) {
                 if (hasUpgrade(child, type))
                     return true;
             }
@@ -88,6 +90,22 @@ public class UpgradesCollection {
     }
 
     public List<UpgradeNode> pickleUpgradeNodesWithEmptyFilled() {
+        // BFS method
+        if (root == null) return Collections.emptyList();
+        List<UpgradeNode> list = new ArrayList<>();
+        Deque<UpgradeNode> openList = new ArrayDeque<>();
+        openList.offer(getRoot());
+        while(!openList.isEmpty()){
+            UpgradeNode node = openList.poll();
+            list.add(node);
+            if(node instanceof SplitUpgradeNode){
+                ((SplitUpgradeNode) node).getChildren().forEach(openList::offer);
+            }
+        }
+        return list;
+    }
+
+    public List<UpgradeNode> pickleUpgradeNodesWithEmptyFilledOld() {
         List<UpgradeNode> list = new ArrayList<>();
         if (root == null) return Collections.emptyList();
         root.getUpgrade().getExtras().putInt("Slot", list.size());
@@ -99,7 +117,114 @@ public class UpgradesCollection {
     }
 
     public List<UpgradeDetail> pickleUpgrades() {
-        return pickleUpgradeNodes().stream().map(UpgradeNode::getUpgrade).collect(Collectors.toList());
+        if (root == null) return Collections.emptyList();
+        List<UpgradeDetail> list = new ArrayList<>();
+        Deque<UpgradeNode> openList = new ArrayDeque<>();
+        openList.offer(getRoot());
+        while(!openList.isEmpty()){
+            UpgradeNode node = openList.poll();
+            if(Upgrades.EMPTY.equals(node.getUpgrade().getType())) continue;
+            list.add(node.getUpgrade());
+            if(node instanceof SplitUpgradeNode){
+                ((SplitUpgradeNode) node).getChildren().forEach(openList::offer);
+            }
+        }
+        return list;
+    }
+
+    public static class UpgradeNodeWrapper{
+        private UpgradeNode node;
+        private int peid; //parent eid
+        private int eid; //element id
+        private int cid; //child no.
+
+        private List<UpgradeNodeWrapper> childrenWrapper = new ArrayList<>();
+
+        public UpgradeNodeWrapper(UpgradeNode node){
+            this.node = node;
+            peid = -1;
+            eid = -1;
+            cid = -1;
+        }
+
+        public UpgradeNode getNode() {
+            return node;
+        }
+
+        public int getPeid() {
+            return peid;
+        }
+
+        public int getEid() {
+            return eid;
+        }
+
+        public int getCid() {
+            return cid;
+        }
+
+        public List<UpgradeNodeWrapper> getChildrenWrapper() {
+            return childrenWrapper;
+        }
+    }
+
+    public List<UpgradeNodeWrapper> flattenNodes(){
+        if (root == null) return Collections.emptyList();
+        List<UpgradeNodeWrapper> list = new ArrayList<>();
+        Deque<UpgradeNodeWrapper> openList = new ArrayDeque<>();
+        UpgradeNodeWrapper w = new UpgradeNodeWrapper(getRoot());
+        openList.offer(w);
+        int counter = 0;
+        while(!openList.isEmpty()){
+            UpgradeNodeWrapper node = openList.poll();
+            node.eid = counter++;
+            list.add(node);
+            if(node.getNode() instanceof SplitUpgradeNode){
+                int c = 0;
+                for (UpgradeNode child : ((SplitUpgradeNode) node.getNode()).getChildren()) {
+                    UpgradeNodeWrapper childWrapper = new UpgradeNodeWrapper(child);
+                    childWrapper.peid = node.eid;
+                    childWrapper.cid = c++;
+                    node.childrenWrapper.add(childWrapper);
+                    openList.offer(childWrapper);
+                }
+            }
+        }
+        return list;
+    }
+
+    public void handleNBT(ListNBT nbt){
+        TreeMap<Integer, UpgradeNodeWrapper> map = new TreeMap<>();
+        for (int i = 0; i < nbt.size(); i++) {
+            CompoundNBT compound = nbt.getCompound(i);
+            String upgradeId = compound.getString("id");
+            Upgrade upgrade = Upgrades.getUpgradeFromId(upgradeId);
+            if (upgrade == null) {
+                continue;
+            }
+            int level = compound.getInt("level");
+            UpgradeDetail detail = new UpgradeDetail(upgrade, level);
+            CompoundNBT sub = compound.getCompound("extra");
+            detail.getExtras().merge(sub);
+            int eid = compound.getInt("eid");
+            int peid = compound.contains("peid") ? compound.getInt("peid") : -1;
+            int cid = compound.contains("cid") ? compound.getInt("cid") : -1;
+            UpgradeNode node = UpgradeNode.createNode(detail);
+            UpgradeNodeWrapper wrapper = new UpgradeNodeWrapper(node);
+            wrapper.eid = eid;
+            wrapper.peid = peid;
+            wrapper.cid = cid;
+            if(wrapper.peid != -1){
+                UpgradeNodeWrapper wrapper1 = map.get(wrapper.peid);
+                if(wrapper1 == null || !(wrapper1.getNode() instanceof SplitUpgradeNode)){
+                    EnhancedMachine.LOGGER.warn(String.format("upgrade entry #%d is pointing to null or leaf node #%d, skipping...", eid, peid));
+                    continue;
+                }
+                ((SplitUpgradeNode) wrapper1.getNode()).getChildren().set(wrapper.cid, wrapper.node);
+            }
+            map.put(wrapper.eid, wrapper);
+        }
+        root = map.ceilingEntry(0).getValue().getNode();
     }
 
     public List<UpgradeDetail> pickleUpgradesCompact() {
@@ -113,8 +238,8 @@ public class UpgradesCollection {
     }
 
     private void handleSubNodes(List<UpgradeNode> list, UpgradeNode node, boolean shallFillEmpty) {
-        if (node instanceof SplitUpgrade) {
-            List<UpgradeNode> children = ((SplitUpgrade) node).getChildren();
+        if (node instanceof SplitUpgradeNode) {
+            List<UpgradeNode> children = ((SplitUpgradeNode) node).getChildren();
             int size = children.size();
             if (shallFillEmpty) {
                 size = Upgrades.RISER.getExpansionSlots(node.getUpgrade().getLevel());
@@ -144,7 +269,7 @@ public class UpgradesCollection {
         }
     }
 
-    public void fromPickle(List<UpgradeDetail> upgradeDetails) {
+    public void fromPickle(List<UpgradeDetail> upgradeDetails){
         if (upgradeDetails.size() == 0) {
             root = new UpgradeNode(new UpgradeDetail(Upgrades.EMPTY, 1));
         }
@@ -155,7 +280,7 @@ public class UpgradesCollection {
             if (firstRoot.isPresent()) {
                 UpgradeDetail rootDetail = firstRoot.get();
                 if (rootDetail.getType() instanceof UpgradeRiser) {
-                    SplitUpgrade root = new SplitUpgrade(rootDetail);
+                    SplitUpgradeNode root = new SplitUpgradeNode(rootDetail);
                     this.root = root;
                     handlePickledChildNode(upgradeDetails, root);
                 } else {
@@ -167,7 +292,7 @@ public class UpgradesCollection {
         }
     }
 
-    private void handlePickledChildNode(List<UpgradeDetail> upgradeDetails, SplitUpgrade node) {
+    private void handlePickledChildNode(List<UpgradeDetail> upgradeDetails, SplitUpgradeNode node) {
         int parentSlot = node.getUpgrade().getExtras().getInt("Slot");
         node.getChildren().addAll(Arrays.asList(new UpgradeNode[Upgrades.RISER.getExpansionSlots(node.getUpgrade().getLevel())]));
         upgradeDetails.parallelStream()
@@ -177,7 +302,7 @@ public class UpgradesCollection {
                 .forEachOrdered(child -> {
                     UpgradeNode childNode;
                     if (child.getType() instanceof UpgradeRiser) {
-                        childNode = new SplitUpgrade(child);
+                        childNode = new SplitUpgradeNode(child);
                     } else {
                         childNode = new UpgradeNode(child);
                     }
@@ -192,8 +317,8 @@ public class UpgradesCollection {
                             }
                         }
                     }
-                    if (childNode instanceof SplitUpgrade) {
-                        handlePickledChildNode(upgradeDetails, (SplitUpgrade) childNode);
+                    if (childNode instanceof SplitUpgradeNode) {
+                        handlePickledChildNode(upgradeDetails, (SplitUpgradeNode) childNode);
                     }
                 });
     }
@@ -207,9 +332,9 @@ public class UpgradesCollection {
         if (requiredDepth == depth) {
             return Lists.newArrayList(current);
         } else {
-            if (current instanceof SplitUpgrade) {
+            if (current instanceof SplitUpgradeNode) {
                 List<UpgradeNode> list = new ArrayList<>();
-                for (UpgradeNode child : ((SplitUpgrade) current).getChildren()) {
+                for (UpgradeNode child : ((SplitUpgradeNode) current).getChildren()) {
                     list.addAll(getNodesImpl(requiredDepth, depth + 1, child));
                 }
                 return list;

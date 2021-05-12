@@ -2,6 +2,7 @@ package io.github.cvrunmin.enhancedmachine.inventory;
 
 import io.github.cvrunmin.enhancedmachine.cap.IUpgradeSlot;
 import io.github.cvrunmin.enhancedmachine.cap.UpgradeNode;
+import io.github.cvrunmin.enhancedmachine.cap.UpgradesCollection;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
@@ -14,11 +15,11 @@ public class SlotUpgradeChipParent extends SlotUpgradeChip {
 
     private boolean branchLock;
 
-    public SlotUpgradeChipParent(IInventory inventoryIn, int index, int xPosition, int yPosition, IUpgradeSlot cap, UpgradeNode upgradeSlot) {
+    public SlotUpgradeChipParent(IInventory inventoryIn, int index, int xPosition, int yPosition, IUpgradeSlot cap, UpgradesCollection.UpgradeNodeWrapper upgradeSlot) {
         this(inventoryIn, index, xPosition, yPosition, cap, upgradeSlot, false);
     }
 
-    public SlotUpgradeChipParent(IInventory inventoryIn, int index, int xPosition, int yPosition, IUpgradeSlot cap, UpgradeNode upgradeSlot, boolean branchLock) {
+    public SlotUpgradeChipParent(IInventory inventoryIn, int index, int xPosition, int yPosition, IUpgradeSlot cap, UpgradesCollection.UpgradeNodeWrapper upgradeSlot, boolean branchLock) {
         super(inventoryIn, index, xPosition, yPosition, cap, upgradeSlot);
         this.branchLock = branchLock;
     }

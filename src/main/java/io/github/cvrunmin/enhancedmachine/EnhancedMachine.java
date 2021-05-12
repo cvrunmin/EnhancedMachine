@@ -1,18 +1,13 @@
 package io.github.cvrunmin.enhancedmachine;
 
-import com.mojang.brigadier.arguments.BoolArgumentType;
 import io.github.cvrunmin.enhancedmachine.cap.IUpgradeSlot;
 import io.github.cvrunmin.enhancedmachine.cap.UpgradeSlot;
-import io.github.cvrunmin.enhancedmachine.client.gui.ChipWriterScreen;
+import io.github.cvrunmin.enhancedmachine.cap.UpgradesCollection;
 import io.github.cvrunmin.enhancedmachine.client.gui.EnhancedMachineConfigScreen;
-import io.github.cvrunmin.enhancedmachine.client.gui.UpgradeChipPanelScreen;
-import io.github.cvrunmin.enhancedmachine.mixin.GameRuleTypeInvoker;
 import io.github.cvrunmin.enhancedmachine.network.*;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrade;
 import io.github.cvrunmin.enhancedmachine.upgrade.UpgradeDetail;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrades;
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.client.gui.screen.inventory.*;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -28,13 +23,13 @@ import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +37,7 @@ import java.util.List;
 @Mod(EnhancedMachine.MODID)
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class EnhancedMachine {
+    public static final Logger LOGGER = LogManager.getLogger();
     public static final String MODID = "enhancedmachine";
     public static final String NAME = "Enhanced Machine";
     public static final String VERSION = "1.0";
@@ -72,13 +68,19 @@ public class EnhancedMachine {
             @Override
             public INBT writeNBT(Capability<IUpgradeSlot> capability, IUpgradeSlot instance, Direction side) {
                 ListNBT nbtTagList = new ListNBT();
-                List<UpgradeDetail> details = instance.getUpgrades().pickleUpgradesCompact();
-                for (UpgradeDetail upgrade : details) {
+                List<UpgradesCollection.UpgradeNodeWrapper> details = instance.getUpgrades().flattenNodes();
+                for (UpgradesCollection.UpgradeNodeWrapper wrapper : details) {
                     CompoundNBT compound = new CompoundNBT();
+                    UpgradeDetail upgrade = wrapper.getNode().getUpgrade();
                     compound.putString("id", upgrade.getType().getUpgradeName());
                     compound.putInt("level", upgrade.getLevel());
                     if (!upgrade.getExtras().isEmpty()) {
                         compound.put("extra", upgrade.getExtras());
+                    }
+                    compound.putInt("eid", wrapper.getEid());
+                    if(wrapper.getPeid() != -1){
+                        compound.putInt("peid", wrapper.getPeid());
+                        compound.putInt("cid", wrapper.getCid());
                     }
                     nbtTagList.add(compound);
                 }
@@ -89,21 +91,27 @@ public class EnhancedMachine {
             public void readNBT(Capability<IUpgradeSlot> capability, IUpgradeSlot instance, Direction side, INBT nbt) {
                 if (nbt instanceof ListNBT) {
                     ListNBT listNBT = (ListNBT) nbt;
-                    List<UpgradeDetail> details = new ArrayList<>();
-                    for (int i = 0; i < listNBT.size(); i++) {
-                        CompoundNBT compound = listNBT.getCompound(i);
-                        String upgradeId = compound.getString("id");
-                        Upgrade upgrade = Upgrades.getUpgradeFromId(upgradeId);
-                        if (upgrade == null) {
-                            continue;
+                    boolean oldMode = !listNBT.getCompound(0).contains("eid");
+                    if(oldMode){
+                        List<UpgradeDetail> details = new ArrayList<>();
+                        for (int i = 0; i < listNBT.size(); i++) {
+                            CompoundNBT compound = listNBT.getCompound(i);
+                            String upgradeId = compound.getString("id");
+                            Upgrade upgrade = Upgrades.getUpgradeFromId(upgradeId);
+                            if (upgrade == null) {
+                                continue;
+                            }
+                            int level = compound.getInt("level");
+                            UpgradeDetail detail = new UpgradeDetail(upgrade, level);
+                            CompoundNBT sub = compound.getCompound("extra");
+                            detail.getExtras().merge(sub);
+                            details.add(detail);
                         }
-                        int level = compound.getInt("level");
-                        UpgradeDetail detail = new UpgradeDetail(upgrade, level);
-                        CompoundNBT sub = compound.getCompound("extra");
-                        detail.getExtras().merge(sub);
-                        details.add(detail);
+                        instance.getUpgrades().fromPickle(details);
                     }
-                    instance.getUpgrades().fromPickle(details);
+                    else{
+                        instance.getUpgrades().handleNBT(listNBT);
+                    }
                 }
             }
         }, UpgradeSlot::new);
@@ -115,17 +123,6 @@ public class EnhancedMachine {
 //        DO_LIMITED_CHIP_MULTIPLIER = GameRules.register("doLimitedChipMultiplier", GameRuleTypeInvoker.createRuleType(BoolArgumentType::bool, type -> new GameRules.BooleanValue(type, true), (minecraftServer, value) -> {
 //            CHANNEL.send(PacketDistributor.ALL.noArg(), new UpdateLimitedMultiplierMessage(((GameRules.BooleanValue) value).get()));
 //        }));
-    }
-
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event){
-        ScreenManager.registerFactory(Initializer.chipWriterContainer.get(), ChipWriterScreen::new);
-        ScreenManager.registerFactory(Initializer.chipPanelContainer.get(), UpgradeChipPanelScreen::new);
-        ScreenManager.registerFactory(Initializer.MODDED_FURNACE.get(), FurnaceScreen::new);
-        ScreenManager.registerFactory(Initializer.MODDED_BLAST_FURNACE.get(), BlastFurnaceScreen::new);
-        ScreenManager.registerFactory(Initializer.MODDED_SMOKER.get(), SmokerScreen::new);
-        ScreenManager.registerFactory(Initializer.MODDED_DISPENSER.get(), DispenserScreen::new);
-        ScreenManager.registerFactory(Initializer.MODDED_BREWING_STAND.get(), BrewingStandScreen::new);
     }
 
     @SubscribeEvent

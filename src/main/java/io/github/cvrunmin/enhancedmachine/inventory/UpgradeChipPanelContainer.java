@@ -3,8 +3,9 @@ package io.github.cvrunmin.enhancedmachine.inventory;
 import io.github.cvrunmin.enhancedmachine.EMItems;
 import io.github.cvrunmin.enhancedmachine.Initializer;
 import io.github.cvrunmin.enhancedmachine.cap.IUpgradeSlot;
-import io.github.cvrunmin.enhancedmachine.cap.SplitUpgrade;
+import io.github.cvrunmin.enhancedmachine.cap.SplitUpgradeNode;
 import io.github.cvrunmin.enhancedmachine.cap.UpgradeNode;
+import io.github.cvrunmin.enhancedmachine.cap.UpgradesCollection;
 import io.github.cvrunmin.enhancedmachine.mixin.inventory.ContainerAccessor;
 import io.github.cvrunmin.enhancedmachine.upgrade.UpgradeDetail;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrades;
@@ -23,6 +24,8 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class UpgradeChipPanelContainer extends Container {
 
@@ -32,7 +35,10 @@ public class UpgradeChipPanelContainer extends Container {
 //    private int focusedSlot = 0;
     private IntReferenceHolder focusedSlot = IntReferenceHolder.single();
     private UpgradeNode focusedNode;
+    private UpgradesCollection.UpgradeNodeWrapper focusedNodeWrapper;
     private Inventory tmpInventory;
+
+    Map<Integer, UpgradesCollection.UpgradeNodeWrapper> upgradeNodes;
 
     public UpgradeChipPanelContainer(int windowId, PlayerInventory playerInventory, IUpgradeSlot cap, BlockPos pos) {
         super(Initializer.chipPanelContainer.get(), windowId);
@@ -106,10 +112,20 @@ public class UpgradeChipPanelContainer extends Container {
         detectAndSendChanges();
     }
 
+    public Map<Integer, UpgradesCollection.UpgradeNodeWrapper> getUpgradeNodes() {
+        return getUpgradeNodes(false);
+    }
+
+    private Map<Integer, UpgradesCollection.UpgradeNodeWrapper> getUpgradeNodes(boolean shouldUpdate) {
+        if(upgradeNodes == null || shouldUpdate){
+            upgradeNodes = cap.getUpgrades().flattenNodes().stream().collect(Collectors.toMap(UpgradesCollection.UpgradeNodeWrapper::getEid, w -> w));
+        }
+        return upgradeNodes;
+    }
+
     public void refreshSlots() {
-        List<Slot> slots = new ArrayList<>();
-        slots.addAll(playerSlots);
-        List<UpgradeNode> upgradeNodes = cap.getUpgrades().pickleUpgradeNodesWithEmptyFilled();
+        List<Slot> slots = new ArrayList<>(playerSlots);
+        Map<Integer, UpgradesCollection.UpgradeNodeWrapper> upgradeNodes = getUpgradeNodes(true);
         if (upgradeNodes.size() == 0) {
             focusedSlot.set(0);
             focusedNode = new UpgradeNode(new UpgradeDetail(Upgrades.EMPTY, 1));
@@ -118,42 +134,44 @@ public class UpgradeChipPanelContainer extends Container {
         if (focusedSlot.get() >= upgradeNodes.size()) {
             focusedSlot.set(0);
         } else {
-            focusedNode = upgradeNodes.get(focusedSlot.get());
+            this.focusedNodeWrapper = upgradeNodes.get(focusedSlot.get());
+            this.focusedNode = focusedNodeWrapper.getNode();
             int slotsCount = 1;
             int expansionSlots = 0;
-            if (Upgrades.RISER.equals(focusedNode.getUpgrade().getType())) {
-                expansionSlots = Upgrades.RISER.getExpansionSlots(focusedNode.getUpgrade().getLevel());
+            if (Upgrades.RISER.equals(this.focusedNode.getUpgrade().getType())) {
+                expansionSlots = Upgrades.RISER.getExpansionSlots(this.focusedNode.getUpgrade().getLevel());
                 slotsCount += expansionSlots;
             }
-            if (focusedNode.getParent() != null) slotsCount++;
+            if (this.focusedNode.getParent() != null) slotsCount++;
             tmpInventory = new Inventory(slotsCount);
             Slot slot;
-            if (focusedNode != cap.getUpgrades().getRoot()) {
-                slot = new SlotUpgradeChipParent(tmpInventory, 0, 80, 60, cap, focusedNode, true);
+            if (this.focusedNode != cap.getUpgrades().getRoot()) {
+                slot = new SlotUpgradeChipParent(tmpInventory, 0, 80, 60, cap, this.focusedNodeWrapper, true);
             } else {
-                slot = new SlotUpgradeChip(tmpInventory, 0, 80, 60, cap, focusedNode);
+                slot = new SlotUpgradeChip(tmpInventory, 0, 80, 60, cap, this.focusedNodeWrapper);
             }
             slots.add(slot);
-            if (!focusedNode.getUpgrade().getType().equals(Upgrades.EMPTY)) {
-                slot.putStack(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), focusedNode.getUpgrade()));
+            if (!this.focusedNode.getUpgrade().getType().equals(Upgrades.EMPTY)) {
+                slot.putStack(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), this.focusedNode.getUpgrade()));
             }
-            if (focusedNode instanceof SplitUpgrade) {
+            if (this.focusedNode instanceof SplitUpgradeNode) {
                 for (int i = 0; i < expansionSlots; i++) {
-                    UpgradeNode node = ((SplitUpgrade) focusedNode).getChildren().get(i);
+                    UpgradesCollection.UpgradeNodeWrapper nodeWrapper = this.focusedNodeWrapper.getChildrenWrapper().get(i);
+                    UpgradeNode node = nodeWrapper.getNode();
                     int xPosition = 80 + (i >= expansionSlots / 2 ? 50 : -50) + (expansionSlots == 16 ? (i < expansionSlots / 4 ? -40 : i >= expansionSlots / 4 * 3 ? 40 : 0) : 0);
                     int yPosition = expansionSlots == 2 ? 60 : expansionSlots == 16 ? (60 + 12 - (8 / 4) * 28 + i % (8 / 2) * 28) : (60 + 12 - (expansionSlots / 4) * 28 + i % (expansionSlots / 2) * 28);
-                    Slot slot1 = new SlotUpgradeChip(tmpInventory, i + 1, xPosition, yPosition, cap, node);
+                    Slot slot1 = new SlotUpgradeChip(tmpInventory, i + 1, xPosition, yPosition, cap, nodeWrapper);
                     slots.add(slot1);
                     if (!node.getUpgrade().getType().equals(Upgrades.EMPTY)) {
                         slot1.putStack(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), node.getUpgrade()));
                     }
                 }
             }
-            if (focusedNode.getParent() != null) {
-                Slot slot1 = new SlotUpgradeChipParent(tmpInventory, slotsCount - 1, 80, 28, cap, focusedNode.getParent());
+            if (this.focusedNode.getParent() != null) {
+                Slot slot1 = new SlotUpgradeChipParent(tmpInventory, slotsCount - 1, 80, 28, cap, getUpgradeNodes().get(this.focusedNodeWrapper.getPeid()));
                 slots.add(slot1);
-                if (!focusedNode.getParent().getUpgrade().getType().equals(Upgrades.EMPTY)) {
-                    slot1.putStack(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), focusedNode.getParent().getUpgrade()));
+                if (!this.focusedNode.getParent().getUpgrade().getType().equals(Upgrades.EMPTY)) {
+                    slot1.putStack(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), this.focusedNode.getParent().getUpgrade()));
                 }
             }
 
@@ -173,15 +191,11 @@ public class UpgradeChipPanelContainer extends Container {
     private void packUpgradeSlots() {
         UpgradeNode checkingNode = focusedNode;
         UpgradeDetail oldUpgrade = checkingNode.getUpgrade().clone();
-        if (focusedNode instanceof SplitUpgrade) return;
+        if (focusedNode instanceof SplitUpgradeNode) return;
         if (Upgrades.RISER.equals(oldUpgrade.getType())) {
             {
-                checkingNode = new SplitUpgrade(oldUpgrade);
+                checkingNode = new SplitUpgradeNode(oldUpgrade);
                 cap.getUpgrades().setRoot(checkingNode);
-                int expansion = Upgrades.RISER.getExpansionSlots(oldUpgrade.getLevel());
-                for (int i1 = 0; i1 < expansion; i1++) {
-                    ((SplitUpgrade) checkingNode).getChildren().add(new UpgradeNode(new UpgradeDetail(Upgrades.EMPTY, 1)));
-                }
             }
         }
     }
@@ -196,49 +210,32 @@ public class UpgradeChipPanelContainer extends Container {
                 checkingNode = focusedNode;
             } else if (focusedNode.getParent() != null && i == tmpInventory.getSizeInventory() - 1) {
                 continue;
-            } else if (focusedNode instanceof SplitUpgrade) {
-                checkingNode = ((SplitUpgrade) focusedNode).getChildren().get(i - 1);
+            } else if (focusedNode instanceof SplitUpgradeNode) {
+                checkingNode = ((SplitUpgradeNode) focusedNode).getChildren().get(i - 1);
             } else continue;
             UpgradeDetail oldUpgrade = checkingNode.getUpgrade().clone();
-            upgrade.getExtras().remove("Slot");
-            upgrade.getExtras().remove("Parent");
-            upgrade.getExtras().remove("SlotOnParent");
-            oldUpgrade.getExtras().remove("Slot");
-            oldUpgrade.getExtras().remove("Parent");
-            oldUpgrade.getExtras().remove("SlotOnParent");
             if (!oldUpgrade.equals(upgrade)) {
-                if (checkingNode.getUpgrade().getExtras().contains("Slot"))
-                    upgrade.getExtras().putInt("Slot", checkingNode.getUpgrade().getExtras().getInt("Slot"));
-                if (checkingNode.getUpgrade().getExtras().contains("Parent"))
-                    upgrade.getExtras().putInt("Parent", checkingNode.getUpgrade().getExtras().getInt("Parent"));
-                if (checkingNode.getUpgrade().getExtras().contains("SlotOnParent"))
-                    upgrade.getExtras().putInt("SlotOnParent", checkingNode.getUpgrade().getExtras().getInt("SlotOnParent"));
                 if (Upgrades.RISER.equals(upgrade.getType())) {
                     if (checkingNode.getParent() != null) {
-                        if (checkingNode.getParent() instanceof SplitUpgrade) {
-                            SplitUpgrade parent = (SplitUpgrade) checkingNode.getParent();
+                        // constraint: if change happens to a node with parent, this must be leaf node
+                        if (checkingNode.getParent() instanceof SplitUpgradeNode) {
+                            SplitUpgradeNode parent = (SplitUpgradeNode) checkingNode.getParent();
                             int index = parent.getChildren().indexOf(checkingNode);
-                            checkingNode = new SplitUpgrade(upgrade);
+                            index = i - 1;
+                            checkingNode = new SplitUpgradeNode(upgrade);
                             parent.getChildren().set(index, checkingNode);
-                            int expansion = Upgrades.RISER.getExpansionSlots(upgrade.getLevel());
-                            for (int i1 = 0; i1 < expansion; i1++) {
-                                ((SplitUpgrade) checkingNode).getChildren().add(new UpgradeNode(new UpgradeDetail(Upgrades.EMPTY, 1)));
-                            }
                         }
                     } else {
-                        checkingNode = new SplitUpgrade(upgrade);
+                        checkingNode = new SplitUpgradeNode(upgrade);
                         cap.getUpgrades().setRoot(checkingNode);
-                        int expansion = Upgrades.RISER.getExpansionSlots(upgrade.getLevel());
-                        for (int i1 = 0; i1 < expansion; i1++) {
-                            ((SplitUpgrade) checkingNode).getChildren().add(new UpgradeNode(new UpgradeDetail(Upgrades.EMPTY, 1)));
-                        }
                     }
                 } else {
-                    if (checkingNode instanceof SplitUpgrade) {
+                    if (checkingNode instanceof SplitUpgradeNode) {
                         if (checkingNode.getParent() != null) {
-                            if (checkingNode.getParent() instanceof SplitUpgrade) {
-                                SplitUpgrade parent = (SplitUpgrade) checkingNode.getParent();
+                            if (checkingNode.getParent() instanceof SplitUpgradeNode) {
+                                SplitUpgradeNode parent = (SplitUpgradeNode) checkingNode.getParent();
                                 int index = parent.getChildren().indexOf(checkingNode);
+                                index = i - 1;
                                 checkingNode = new UpgradeNode(upgrade);
                                 parent.getChildren().set(index, checkingNode);
                             }
