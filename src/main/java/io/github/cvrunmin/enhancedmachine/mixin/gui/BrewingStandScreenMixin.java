@@ -40,7 +40,7 @@ public abstract class BrewingStandScreenMixin extends ContainerScreen<BrewingSta
         int k = this.container.func_216982_e();
         IInventory tileBrewingStand = ((BrewingStandContainerAccessor) this.container).getTileBrewingStand();
         int fuelTime = tileBrewingStand instanceof IBrewingStandExt ? ((IBrewingStandExt) tileBrewingStand).getFuelTime() : 20;
-        int l = MathHelper.clamp((18 * k + fuelTime - 1) / 20, 0, 18);
+        int l = MathHelper.clamp((18 * k + fuelTime - 1) / fuelTime, 0, 18);
         if (l > 0) {
             this.blit(i + 60, j + 44, 176, 29, l, 4);
         }

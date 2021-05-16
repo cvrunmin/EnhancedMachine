@@ -117,13 +117,15 @@ public class UpgradeChipPanelScreen extends ContainerScreen<UpgradeChipPanelCont
         } else if (stack.getItem().equals(EMItems.UPGRADE_CHIP.get())) {
             List<String> list = new ArrayList<>();
             UpgradeDetail upgradeDetail = Upgrades.getUpgradeFromItemStack(stack);
-            Block block = cap.getHolder().getBlockState().getBlock();
-            boolean noFunc = !upgradeDetail.getType().getSupportedBlocks().isEmpty() && !upgradeDetail.getType().getSupportedBlocks().contains(block);
-            if (noFunc) {
-                list.add(TextFormatting.YELLOW + I18n.format("upgrade.warning.no_function", I18n.format(block.getTranslationKey())));
-            } else if (!Upgrades.RISER.equals(upgradeDetail.getType())) {
-                if (cap.hasUpgradeInstalled(upgradeDetail.getType())) {
-                    list.add(TextFormatting.YELLOW + I18n.format("upgrade.warning.duplicated"));
+            if(cap.getHolder() != null) {
+                Block block = cap.getHolder().getBlockState().getBlock();
+                boolean noFunc = !upgradeDetail.getType().getSupportedBlocks().isEmpty() && !upgradeDetail.getType().getSupportedBlocks().contains(block);
+                if (noFunc) {
+                    list.add(TextFormatting.YELLOW + I18n.format("upgrade.warning.no_function", I18n.format(block.getTranslationKey())));
+                } else if (!Upgrades.RISER.equals(upgradeDetail.getType())) {
+                    if (cap.hasUpgradeInstalled(upgradeDetail.getType())) {
+                        list.add(TextFormatting.YELLOW + I18n.format("upgrade.warning.duplicated"));
+                    }
                 }
             }
             if (!list.isEmpty()) {

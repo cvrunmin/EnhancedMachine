@@ -45,7 +45,7 @@ public class UpgradeTimeAcceleration extends Upgrade {
             list.add(I18n.format(getTranslationKey() + ".func.2.brewing_stand", I18n.format(Items.BLAZE_POWDER.getTranslationKey()), 100 - 100f / getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
         } else {
             list.add(I18n.format(getTranslationKey() + ".func.1", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
-            list.add(I18n.format(getTranslationKey() + ".func.2", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
+//            list.add(I18n.format(getTranslationKey() + ".func.2", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
         }
         return list;
     }

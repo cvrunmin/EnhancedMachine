@@ -50,28 +50,6 @@ public abstract class DispenserBlockMixin {
 //
 //    }
 
-    private static void registerBehaviors() {
-
-//        OTHER_BEHAVIOR.put(Item.getItemFromBlock(Blocks.TNT), new DefaultDispenseItemBehavior() {
-//            /**
-//             * Dispense the specified stack, play the dispense sound and spawn particles.
-//             */
-//            protected ItemStack dispenseStack(IBlockSource source, ItemStack stack) {
-//                World world = source.getWorld();
-//                EnumFacing facing = source.getBlockState().getValue(BlockDispenser.FACING);
-//                BlockPos blockpos = source.getBlockPos().offset(facing);
-//                EntityTNTPrimed entitytntprimed = new EntityTNTPrimed(world, (double) blockpos.getX() + 0.5D, blockpos.getY(), (double) blockpos.getZ() + 0.5D, (EntityLivingBase) null);
-//                entitytntprimed.motionX += facing.getXOffset() * 0.9 + world.rand.nextFloat() * 2 - 1;
-//                entitytntprimed.motionY += 0.4;
-//                entitytntprimed.motionZ += facing.getZOffset() * 1 + 0.5;
-//                world.spawnEntity(entitytntprimed);
-//                world.playSound(null, entitytntprimed.posX, entitytntprimed.posY, entitytntprimed.posZ, SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.BLOCKS, 1.0F, 1.0F);
-//                stack.shrink(1);
-//                return stack;
-//            }
-//        });
-    }
-
     @Shadow protected abstract IDispenseItemBehavior getBehavior(ItemStack stack);
 
     @Inject(method = "onReplaced", at = @At(value = "HEAD"))

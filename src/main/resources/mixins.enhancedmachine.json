@@ -29,7 +29,7 @@
         "inventory.DispenserContainerMixin",
         "tileentity.DispenserTileEntityMixin",
         "tileentity.BrewingStandTileEntityMixin",
-        "tileentity.ChestTileEntityMixin",
+
         "block.BrewingStandBlockMixin",
         "block.DispenserBlockMixin",
         "GameRuleTypeInvoker",

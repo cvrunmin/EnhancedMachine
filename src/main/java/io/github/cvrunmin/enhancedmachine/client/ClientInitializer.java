@@ -4,6 +4,7 @@ import io.github.cvrunmin.enhancedmachine.EMItems;
 import io.github.cvrunmin.enhancedmachine.EnhancedMachine;
 import io.github.cvrunmin.enhancedmachine.Initializer;
 import io.github.cvrunmin.enhancedmachine.client.gui.ChipWriterScreen;
+import io.github.cvrunmin.enhancedmachine.client.gui.EnhancedMachineConfigScreen;
 import io.github.cvrunmin.enhancedmachine.client.gui.UpgradeChipPanelScreen;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrades;
 import net.minecraft.client.gui.ScreenManager;
@@ -12,6 +13,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
@@ -31,6 +34,7 @@ public class ClientInitializer {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event){
+        ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (mc, parent) -> new EnhancedMachineConfigScreen(parent));
         ScreenManager.registerFactory(Initializer.chipWriterContainer.get(), ChipWriterScreen::new);
         ScreenManager.registerFactory(Initializer.chipPanelContainer.get(), UpgradeChipPanelScreen::new);
         ScreenManager.registerFactory(Initializer.MODDED_FURNACE.get(), FurnaceScreen::new);

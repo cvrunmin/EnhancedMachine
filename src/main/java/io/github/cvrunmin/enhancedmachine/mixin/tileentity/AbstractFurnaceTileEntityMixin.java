@@ -95,15 +95,15 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
             return 0;
         } else {
             double scalingRate = 1;
+            if (upgradeSlot.hasUpgradeInstalled(Upgrades.FUEL_MASTERY)) {
+                UpgradeNode upgradeDetail = upgradeSlot.getFirstFoundUpgrade(Upgrades.FUEL_MASTERY);
+                if(!EMConfig.isBanned(upgradeDetail.getUpgrade()))
+                    scalingRate = scalingRate * (Upgrades.FUEL_MASTERY.getTimeBoost(upgradeDetail.getUpgrade().getLevel()) * upgradeSlot.getEffectMultiplier(upgradeDetail));
+            }
             if (upgradeSlot.hasUpgradeInstalled(Upgrades.TIME_ACCELERATION)) {
                 UpgradeNode upgradeDetail = upgradeSlot.getFirstFoundUpgrade(Upgrades.TIME_ACCELERATION);
                 if(!EMConfig.isBanned(upgradeDetail.getUpgrade()))
                 scalingRate = scalingRate / (Upgrades.TIME_ACCELERATION.getSpeedBoost(upgradeDetail.getUpgrade().getLevel()) * upgradeSlot.getEffectMultiplier(upgradeDetail));
-            }
-            if (upgradeSlot.hasUpgradeInstalled(Upgrades.FUEL_MASTERY)) {
-                UpgradeNode upgradeDetail = upgradeSlot.getFirstFoundUpgrade(Upgrades.FUEL_MASTERY);
-                if(!EMConfig.isBanned(upgradeDetail.getUpgrade()))
-                scalingRate = scalingRate * (Upgrades.FUEL_MASTERY.getTimeBoost(upgradeDetail.getUpgrade().getLevel()) * upgradeSlot.getEffectMultiplier(upgradeDetail));
             }
             return (int) Math.max(1, net.minecraftforge.common.ForgeHooks.getBurnTime(fuel) * scalingRate);
         }
@@ -275,6 +275,9 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
                 }
 
                 if (this.isBurningCheckFreeEnergy() && this.canSmelt()) {
+                    if(this.cookTime == 0 && !flag){
+                        this.cookTimeTotal = this.getCookTime();
+                    }
                     if(this.isBurningCheckFreeEnergy() && ! this.isBurning() && !freeEnergyBurnFlag){
                         freeEnergyBurnFlag = true;
                     }

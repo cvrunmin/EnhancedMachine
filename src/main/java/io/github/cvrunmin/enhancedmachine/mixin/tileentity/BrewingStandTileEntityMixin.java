@@ -130,7 +130,7 @@ public abstract class BrewingStandTileEntityMixin extends TileEntity implements 
         }
 
         boolean flag = this.canBrew();
-        boolean flag1 = hasFuelCheckFreeEnergy();
+        boolean flag1 = this.brewTime > 0;
         ItemStack itemstack1 = this.brewingItemStacks.get(3);
         if (flag1) {
             --this.brewTime;
