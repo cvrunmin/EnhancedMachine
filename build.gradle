@@ -135,6 +135,7 @@ dependencies {
         exclude module: 'commons-io'
         exclude module: 'gson'
     }
+    annotationProcessor 'org.spongepowered:mixin:0.8.1-SNAPSHOT:processor'
 
     // These dependencies get remapped to your current MCP mappings
     // deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
