@@ -8,6 +8,7 @@ import io.github.cvrunmin.enhancedmachine.cap.UpgradeNode;
 import io.github.cvrunmin.enhancedmachine.network.UpgradeUpdateMessage;
 import io.github.cvrunmin.enhancedmachine.tileentity.IHyperthreadable;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrades;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
@@ -54,7 +55,7 @@ public abstract class DispenserTileEntityMixin extends LockableLootTileEntity im
     }
 
     @Inject(method = "read", at = @At(value = "HEAD", shift = At.Shift.AFTER))
-    public void afterReadNBT(CompoundNBT nbt, CallbackInfo info){
+    public void afterReadNBT(BlockState state, CompoundNBT nbt, CallbackInfo ci){
         CapabilityUpgradeSlot.UPGRADE_SLOT.readNBT(upgradeSlot, null, nbt.getList("Upgrades", 10));
     }
 

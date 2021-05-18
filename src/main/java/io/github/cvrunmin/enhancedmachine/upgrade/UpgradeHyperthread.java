@@ -8,6 +8,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.Rarity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +36,10 @@ public class UpgradeHyperthread extends Upgrade {
     }
 
     @Override
-    public List<String> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
-        List<String> list = new ArrayList<>();
+    public List<ITextComponent> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
+        List<ITextComponent> list = new ArrayList<>();
         if(cap.getHolder() instanceof IHyperthreadable){
-            list.add(I18n.format(getTranslationKey() + ".func", ((IHyperthreadable) cap.getHolder()).getHyperthreadedSlotsCount()));
+            list.add(new TranslationTextComponent(getTranslationKey() + ".func", ((IHyperthreadable) cap.getHolder()).getHyperthreadedSlotsCount()));
         }
         return list;
     }

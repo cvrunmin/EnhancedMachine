@@ -1,13 +1,14 @@
 package io.github.cvrunmin.enhancedmachine.inventory;
 
 import io.github.cvrunmin.enhancedmachine.cap.IUpgradeSlot;
-import io.github.cvrunmin.enhancedmachine.cap.UpgradeNode;
 import io.github.cvrunmin.enhancedmachine.cap.UpgradesCollection;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.List;
 
@@ -35,9 +36,9 @@ public class SlotUpgradeChipParent extends SlotUpgradeChip {
     }
 
     @Override
-    public List<String> getInstalledChipTooltips() {
-        List<String> list = super.getInstalledChipTooltips();
-        list.add(TextFormatting.RED + I18n.format(branchLock ? "upgrade.warning.branch_lock" : "upgrade.warning.parent"));
+    public List<ITextComponent> getInstalledChipTooltips() {
+        List<ITextComponent> list = super.getInstalledChipTooltips();
+        list.add(new TranslationTextComponent(branchLock ? "upgrade.warning.branch_lock" : "upgrade.warning.parent").mergeStyle(TextFormatting.RED));
         return list;
     }
 }

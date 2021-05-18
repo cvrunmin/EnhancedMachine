@@ -5,6 +5,8 @@ import io.github.cvrunmin.enhancedmachine.cap.UpgradeNode;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.Rarity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +22,9 @@ public class UpgradeObsidianCoating extends Upgrade {
     }
 
     @Override
-    public List<String> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
-        List<String> list = new ArrayList<>();
-        list.add(I18n.format(getTranslationKey() + ".func", 80 * cap.getEffectMultiplier(node), I18n.format(Blocks.OBSIDIAN.getTranslationKey())));
+    public List<ITextComponent> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
+        List<ITextComponent> list = new ArrayList<>();
+        list.add(new TranslationTextComponent(getTranslationKey() + ".func", 80 * cap.getEffectMultiplier(node), I18n.format(Blocks.OBSIDIAN.getTranslationKey())));
         return list;
     }
 }

@@ -1,5 +1,6 @@
 package io.github.cvrunmin.enhancedmachine.client.gui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.cvrunmin.enhancedmachine.EnhancedMachine;
@@ -14,6 +15,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.client.gui.GuiUtils;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
 import org.lwjgl.opengl.GL11;
@@ -25,6 +27,10 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
     protected ChipWriterScreen owner;
     protected int[] weights;
     protected UpgradeDetail upgradeDetail;
+    // Shadow superclass's renderHeader
+    private boolean renderHeader;
+    // Shadow superclass' renderSelection
+    private boolean renderSelection;
 
     public GuiRiserWeightsWriter(ChipWriterScreen owner, UpgradeDetail upgradeDetail) {
         this(upgradeDetail, owner.getMinecraft(), owner.getXSize(), owner.height - 14 - 8, owner.getGuiTop() + 14, owner.getGuiTop() + owner.getYSize() - 8, 18);
@@ -40,7 +46,7 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
     }
 
     @Override
-    public void render(int mouseXIn, int mouseYIn, float partialTicks) {
+    public void render(MatrixStack matrixStack, int mouseXIn, int mouseYIn, float partialTicks) {
         if (true) {
 //            this.mouseX = mouseXIn;
 //            this.mouseY = mouseYIn;
@@ -63,10 +69,10 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
             int l = this.y0 + 4 - (int) this.getScrollAmount();
 
             if (this.renderHeader) {
-                this.renderHeader(k, l, tessellator);
+                this.renderHeader(matrixStack, k, l, tessellator);
             }
 
-            this.renderList(k, l, mouseXIn, mouseYIn, partialTicks);
+            this.renderList(matrixStack, k, l, mouseXIn, mouseYIn, partialTicks);
             RenderSystem.disableDepthTest();
             RenderSystem.enableBlend();
             RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
@@ -103,7 +109,7 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
                 tessellator.draw();
             }
 
-            this.renderDecorations(mouseXIn, mouseYIn);
+            this.renderDecorations(matrixStack, mouseXIn, mouseYIn);
             RenderSystem.enableTexture();
             RenderSystem.shadeModel(GL11.GL_FLAT);
             RenderSystem.enableAlphaTest();
@@ -117,8 +123,20 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
         return this.x1 - 6;
     }
 
-    private int getMaxScroll() {
+    public int getMaxScroll() {
         return Math.max(0, this.getMaxPosition() - (this.y1 - this.y0 - 4));
+    }
+
+    @Override
+    protected void setRenderHeader(boolean value, int height) {
+        super.setRenderHeader(value, height);
+        this.renderHeader = value;
+    }
+
+    @Override
+    public void setRenderSelection(boolean renderSelection) {
+        super.setRenderSelection(renderSelection);
+        this.renderSelection = renderSelection;
     }
 
     @Override
@@ -137,7 +155,7 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
                 this.weights = weights;
             }
             for (int i = 0; i < this.weights.length; i++) {
-                this.children().add(new Entry(this, i));
+                this.addEntry(new Entry(this, i));
             }
         }
     }
@@ -160,8 +178,8 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
 //        return posX < this.getScrollBarX() && posX >= i && posX <= j && l >= 0 && k >= 0 && l < this.getSize() ? l : -1;
 //    }
 
-    protected void renderList(int insideLeft, int insideTop, int mouseXIn, int mouseYIn, float partialTicks) {
-        int i = this.children().size();
+    protected void renderList(MatrixStack matrixStack, int insideLeft, int insideTop, int mouseXIn, int mouseYIn, float partialTicks) {
+        int i = this.getEventListeners().size();
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
 
@@ -194,7 +212,7 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
                 RenderSystem.enableTexture();
             }
 
-            e.render(j, insideLeft, k, getRowWidth(), l, mouseXIn, mouseYIn, this.isMouseOver(mouseXIn, mouseYIn) && Objects.equals(this.getEntryAtPosition(mouseXIn, mouseYIn), e), partialTicks);
+            e.render(matrixStack, j, insideLeft, k, getRowWidth(), l, mouseXIn, mouseYIn, this.isMouseOver(mouseXIn, mouseYIn) && Objects.equals(this.getEntryAtPosition(mouseXIn, mouseYIn), e), partialTicks);
         }
     }
 
@@ -210,29 +228,29 @@ public class GuiRiserWeightsWriter extends ExtendedList<GuiRiserWeightsWriter.En
             this.parent = parent;
             this.mc = parent.minecraft;
             this.index = index;
-            this.btnAdd = new ExtendedButton(0, 0, 18, 18, "+", but->{
+            this.btnAdd = new ExtendedButton(0, 0, 18, 18, new StringTextComponent("+"), but->{
                 
             });
             btnAdd.setFGColor(GuiUtils.getColorCode('2', true));
 //            this.btnAdd.active = parent.isVisible;
-            this.btnSubtract = new ExtendedButton(0, 0, 18, 18, "-", but->{});
+            this.btnSubtract = new ExtendedButton(0, 0, 18, 18, new StringTextComponent("-"), but->{});
             this.btnSubtract.setFGColor(GuiUtils.getColorCode('c', true));
 //            this.btnSubtract.active = parent.getEnabled();
         }
 
         @Override
-        public void render(int slotIndex, int x, int y, int listWidth, int slotHeight, int mouseX, int mouseY, boolean isSelected, float partialTicks) {
-            AbstractGui.fill(x, y, x + listWidth, y + slotHeight, 0xff000000);
+        public void render(MatrixStack matrixStack, int slotIndex, int x, int y, int listWidth, int slotHeight, int mouseX, int mouseY, boolean isSelected, float partialTicks) {
+            AbstractGui.fill(matrixStack, x, y, x + listWidth, y + slotHeight, 0xff000000);
             float total = Arrays.stream(parent.weights).sum();
-            this.mc.fontRenderer.drawString(I18n.format("upgrade.riser.weight", index + 1, parent.weights[index], parent.weights[index] / total * 100), x + 2, y + ((slotHeight - this.mc.fontRenderer.FONT_HEIGHT) / 2), 0xFFFFFF);
+            this.mc.fontRenderer.drawString(matrixStack, I18n.format("upgrade.riser.weight", index + 1, parent.weights[index], parent.weights[index] / total * 100), x + 2, y + ((slotHeight - this.mc.fontRenderer.FONT_HEIGHT) / 2), 0xFFFFFF);
             this.btnAdd.visible = true;
             this.btnAdd.x = x + listWidth - 40;
             this.btnAdd.y = y;
-            this.btnAdd.renderButton(mouseX, mouseY, partialTicks);
+            this.btnAdd.render(matrixStack, mouseX, mouseY, partialTicks);
             this.btnSubtract.visible = true;
             this.btnSubtract.x = x + listWidth - 20;
             this.btnSubtract.y = y;
-            this.btnSubtract.renderButton(mouseX, mouseY, partialTicks);
+            this.btnSubtract.render(matrixStack, mouseX, mouseY, partialTicks);
         }
 
         @Override

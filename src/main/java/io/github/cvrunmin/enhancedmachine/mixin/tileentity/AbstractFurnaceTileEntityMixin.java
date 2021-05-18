@@ -10,6 +10,7 @@ import io.github.cvrunmin.enhancedmachine.network.UpgradeUpdateMessage;
 import io.github.cvrunmin.enhancedmachine.tileentity.IHyperthreadable;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrades;
 import net.minecraft.block.AbstractFurnaceBlock;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
@@ -62,7 +63,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
     @Shadow
     private int burnTime;
     @Shadow
-    private int recipesUsed;
+    private int burnTimeTotal;
     @Shadow
     @Final
     protected IRecipeType<? extends AbstractCookingRecipe> recipeType;
@@ -81,7 +82,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
     }
 
     @Inject(method = "read", at = @At("TAIL"))
-    public void afterReadNBT(CompoundNBT nbt, CallbackInfo info){
+    public void afterReadNBT(BlockState blockState, CompoundNBT nbt, CallbackInfo info){
         CapabilityUpgradeSlot.UPGRADE_SLOT.readNBT(upgradeSlot, null, nbt.getList("Upgrades", 10));
     }
 
@@ -129,7 +130,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
     @Override
     public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
         super.onDataPacket(net, pkt);
-        handleUpdateTag(pkt.getNbtCompound());
+        handleUpdateTag(getWorld().getBlockState(pkt.getPos()), pkt.getNbtCompound());
     }
 
     @Override
@@ -258,7 +259,7 @@ public abstract class AbstractFurnaceTileEntityMixin extends TileEntity implemen
             if (this.isBurningCheckFreeEnergy() || !itemstack.isEmpty() && isInputReady()) {
                 if (!this.isFuelBurning() && !this.canUseFreeEnergy() && this.canSmelt()) {
                     this.burnTime = this.getBurnTime(itemstack);
-                    this.recipesUsed = this.burnTime;
+                    this.burnTimeTotal = this.burnTime;
                     if (this.isBurning()) {
                         flag1 = true;
                         if (itemstack.hasContainerItem())

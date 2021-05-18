@@ -27,6 +27,7 @@ import net.minecraft.tileentity.DispenserTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.NetworkHooks;
 import org.spongepowered.asm.mixin.Mixin;
@@ -79,7 +80,7 @@ public abstract class DispenserBlockMixin {
 
     @Redirect(method = "dispense", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/DispenserBlock;getBehavior(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/dispenser/IDispenseItemBehavior;"))
 //    @Inject(method = "dispense", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/DispenserBlock;getBehavior(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/dispenser/IDispenseItemBehavior;", shift = At.Shift.BY, by = 2), locals = LocalCapture.CAPTURE_FAILSOFT)
-    private IDispenseItemBehavior hijackDispenseBehavior(DispenserBlock dispenserBlock, ItemStack stack, World world, BlockPos pos){
+    private IDispenseItemBehavior hijackDispenseBehavior(DispenserBlock dispenserBlock, ItemStack stack, ServerWorld world, BlockPos pos){
         ProxyBlockSource proxyblocksource = new ProxyBlockSource(world, pos);
         DispenserTileEntity dispensertileentity = proxyblocksource.getBlockTileEntity();
         LazyOptional<IUpgradeSlot> optional = dispensertileentity.getCapability(CapabilityUpgradeSlot.UPGRADE_SLOT);

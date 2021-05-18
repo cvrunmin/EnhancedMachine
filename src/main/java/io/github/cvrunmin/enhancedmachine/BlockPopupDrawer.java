@@ -16,6 +16,11 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.*;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Quaternion;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -97,25 +102,25 @@ public class BlockPopupDrawer {
             double playerX = player.lastTickPosX + (player.getPosX() - player.lastTickPosX) * (double) partialTicks;
             double playerY = player.lastTickPosY + (player.getPosY() - player.lastTickPosY) * (double) partialTicks + player.getEyeHeight();
             double playerZ = player.lastTickPosZ + (player.getPosZ() - player.lastTickPosZ) * (double) partialTicks;
-            Vec3d d = new Vec3d(tagLocation).subtract(playerX, playerY, playerZ);
-            List<String> details = new ArrayList<>();
+            Vector3d d = new Vector3d(tagLocation.getX(), tagLocation.getY(), tagLocation.getZ()).subtract(playerX, playerY, playerZ);
+            List<ITextComponent> details = new ArrayList<>();
             for (UpgradeDetail detail : capability.orElseThrow(NullPointerException::new).getUpgrades().pickleUpgrades()) {
                 if (!detail.getType().equals(Upgrades.EMPTY)) {
-                    details.add(Upgrades.getUpgradeFullTitle(detail).getFormattedText());
+                    details.add(Upgrades.getUpgradeFullTitle(detail));
                 }
             }
             if (details.isEmpty()) return;
-            details.add(0, I18n.format(lookingBlock.getBlock().getTranslationKey()));
+            details.add(0, new TranslationTextComponent(lookingBlock.getBlock().getTranslationKey()));
             FontRenderer fontRenderer = Minecraft.getInstance().getRenderManager().getFontRenderer();
             if (fontRenderer == null) return;
             int rectWidth = 0;
-            for (String detail : details) {
-                rectWidth = Math.max(rectWidth, fontRenderer.getStringWidth(detail));
+            for (ITextComponent detail : details) {
+                rectWidth = Math.max(rectWidth, fontRenderer.getStringWidth(detail.getString()));
             }
             int rectHalfWidth = rectWidth / 2;
             float stringHeight = fontRenderer.FONT_HEIGHT * 1.1f;
             float stringsHeight = stringHeight * 1.1f * details.size();
-            int prevMatrixMode = GlStateManager.getInteger(GL11.GL_MATRIX_MODE);
+//            int prevMatrixMode = GlStateManager.getInteger(GL11.GL_MATRIX_MODE);
 //            RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 //            RenderSystem.pushMatrix();
 //            RenderSystem.translated(0.5, 0.5, 0.50005);
@@ -171,10 +176,10 @@ public class BlockPopupDrawer {
             if (alpha != 0) {
                 int color = 0xFFFFFF | alpha;
                 for (int i = 0; i < details.size(); i++) {
-                    String text = details.get(i);
+                    ITextComponent text = details.get(i);
 //                    fontRenderer.drawString(text, -fontRenderer.getStringWidth(text) / 2, (int) (-stringsHeight / 2 + stringHeight * i), color);
                     IRenderTypeBuffer.Impl irendertypebuffer$impl = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
-                    fontRenderer.renderString(text, -fontRenderer.getStringWidth(text) / 2, (int) (-stringsHeight / 2 + stringHeight * i), color, false, last, irendertypebuffer$impl, false, 0, 0xf000f0);
+                    fontRenderer.drawText(matrixStack, text, -fontRenderer.getStringWidth(text.getString()) / 2f, (-stringsHeight / 2 + stringHeight * i), color);
                     irendertypebuffer$impl.finish();
                 }
             }
@@ -182,7 +187,7 @@ public class BlockPopupDrawer {
             matrixStack.pop();
 //            RenderSystem.popMatrix();
 //            RenderSystem.popMatrix();
-            RenderSystem.matrixMode(prevMatrixMode);
+//            RenderSystem.matrixMode(prevMatrixMode);
             RenderSystem.disableBlend();
         }
     }

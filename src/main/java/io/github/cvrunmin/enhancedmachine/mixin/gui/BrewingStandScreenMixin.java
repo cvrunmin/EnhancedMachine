@@ -1,5 +1,6 @@
 package io.github.cvrunmin.enhancedmachine.mixin.gui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.cvrunmin.enhancedmachine.mixin.inventory.BrewingStandContainerAccessor;
 import io.github.cvrunmin.enhancedmachine.tileentity.IBrewingStandExt;
@@ -31,18 +32,18 @@ public abstract class BrewingStandScreenMixin extends ContainerScreen<BrewingSta
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.minecraft.getTextureManager().bindTexture(BREWING_STAND_GUI_TEXTURES);
         int i = (this.width - this.xSize) / 2;
         int j = (this.height - this.ySize) / 2;
-        this.blit(i, j, 0, 0, this.xSize, this.ySize);
+        this.blit(matrixStack, i, j, 0, 0, this.xSize, this.ySize);
         int k = this.container.func_216982_e();
         IInventory tileBrewingStand = ((BrewingStandContainerAccessor) this.container).getTileBrewingStand();
         int fuelTime = tileBrewingStand instanceof IBrewingStandExt ? ((IBrewingStandExt) tileBrewingStand).getFuelTime() : 20;
         int l = MathHelper.clamp((18 * k + fuelTime - 1) / fuelTime, 0, 18);
         if (l > 0) {
-            this.blit(i + 60, j + 44, 176, 29, l, 4);
+            this.blit(matrixStack, i + 60, j + 44, 176, 29, l, 4);
         }
 
         int i1 = this.container.func_216981_f();
@@ -50,12 +51,12 @@ public abstract class BrewingStandScreenMixin extends ContainerScreen<BrewingSta
             float brewTime = tileBrewingStand instanceof IBrewingStandExt ? ((IBrewingStandExt) tileBrewingStand).getBrewTime() : 400.0F;
             int j1 = (int) (28.0F * (1.0F - (float) i1 / brewTime));
             if (j1 > 0) {
-                this.blit(i + 97, j + 16, 176, 0, 9, j1);
+                this.blit(matrixStack, i + 97, j + 16, 176, 0, 9, j1);
             }
 
             j1 = BUBBLELENGTHS[i1 / 2 % 7];
             if (j1 > 0) {
-                this.blit(i + 63, j + 14 + 29 - j1, 185, 29 - j1, 12, j1);
+                this.blit(matrixStack, i + 63, j + 14 + 29 - j1, 185, 29 - j1, 12, j1);
             }
         }
     }

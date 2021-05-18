@@ -19,7 +19,6 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -28,7 +27,6 @@ import net.minecraftforge.fml.client.gui.GuiUtils;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -60,8 +58,8 @@ public class BannedUpgradesConfigScreen extends Screen {
         }
         listWidth = Math.max(Math.min(listWidth, width/3), 100);
 
-        this.addButton(new Button(this.width / 2 - 100, this.height - 26, 200, 20, I18n.format("gui.done"), (p_213056_1_) -> {
-            onClose();
+        this.addButton(new Button(this.width / 2 - 100, this.height - 26, 200, 20, new TranslationTextComponent("gui.done"), (p_213056_1_) -> {
+            this.getMinecraft().displayGuiScreen(this.lastScreen);
         }));
 
         this.list = new AvailableUpgradeList(this, listWidth, 32, this.height - 32);
@@ -74,7 +72,6 @@ public class BannedUpgradesConfigScreen extends Screen {
     public void onClose() {
         cacheBanItems();
         EMConfig.BANNDED_UPGRADES.set(bannedUpgradeInfoList.stream().map(EMConfig.BannedUpgradeInfo::toString).collect(Collectors.toList()));
-        this.getMinecraft().displayGuiScreen(this.lastScreen);
     }
 
     @Override
@@ -82,7 +79,7 @@ public class BannedUpgradesConfigScreen extends Screen {
         this.list.setSelected(selectedEntry);
     }
 
-    protected void renderHoveredToolTip(int mouseX, int mouseY) {
+    protected void renderHoveredTooltip(MatrixStack matrixStack, int mouseX, int mouseY) {
         if(selectedEntry != null) {
             int listViewX = this.width - 100 - 26;
             int listViewY = 32 + 20 + 20;
@@ -93,10 +90,10 @@ public class BannedUpgradesConfigScreen extends Screen {
                 int m = listViewY + l * 20;
                 if (mouseX >= k && mouseY >= m && mouseX < k + 20 && mouseY < m + 20) {
                     boolean isBanned = bannedLevelSet.contains(i + 1);
-                    List<String> lines = Stream.of(Upgrades.getUpgradeFullTitle(new UpgradeDetail(selectedEntry.upgrade, i + 1)),
-                            new TranslationTextComponent("enhancedmachine.config.general.bannedUpgrades." + (isBanned ? "on" : "off")).applyTextStyle(isBanned ? TextFormatting.RED : TextFormatting.WHITE))
-                            .map(ITextComponent::getFormattedText).collect(Collectors.toList());
-                    GuiUtils.drawHoveringText(lines, mouseX, mouseY, width, height, -1, font);
+                    List<ITextComponent> lines = Stream.of(Upgrades.getUpgradeFullTitle(new UpgradeDetail(selectedEntry.upgrade, i + 1)),
+                            new TranslationTextComponent("enhancedmachine.config.general.bannedUpgrades." + (isBanned ? "on" : "off")).mergeStyle(isBanned ? TextFormatting.RED : TextFormatting.WHITE))
+                            .collect(Collectors.toList());
+                    GuiUtils.drawHoveringText(matrixStack, lines, mouseX, mouseY, width, height, -1, font);
                     break;
                 }
             }
@@ -104,26 +101,31 @@ public class BannedUpgradesConfigScreen extends Screen {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTick) {
-        this.list.render(mouseX, mouseY, partialTick);
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTick) {
+        this.list.render(matrixStack, mouseX, mouseY, partialTick);
         if(selectedEntry != null) {
             RenderSystem.pushMatrix();
             RenderSystem.translatef(this.list.getRight() + 6, 32, 0);
             RenderSystem.scalef(4,4,1);
+//            matrixStack.push();
+//            matrixStack.translate(this.list.getRight() + 6, 32, 0);
+//            matrixStack.scale(4, 4, 1);
             this.getMinecraft().getItemRenderer().renderItemAndEffectIntoGUI(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), new UpgradeDetail(selectedEntry.upgrade, 1)),
                     /*this.list.getRight() + 6, 32*/0, 0);
             RenderSystem.scalef(0.5f * 1,0.5f * 1,1);
-            font.drawString(I18n.format(selectedEntry.upgrade.getTranslationKey()), 17 * 2, 0, 0xffffff);
+//            matrixStack.scale(0.5f, 0.5f, 1);
+            font.drawString(matrixStack, I18n.format(selectedEntry.upgrade.getTranslationKey()), 17 * 2, 0, 0xffffff);
             RenderSystem.popMatrix();
+//            matrixStack.pop();
             int listViewX = this.width - 100 - 26;
-            font.drawSplitString(I18n.format(selectedEntry.upgrade.getTranslationKey() + ".desc"), this.list.getRight() + 6 + 17*4, 32 + font.FONT_HEIGHT*2, Math.max( listViewX - 6 - (this.list.getRight() + 6 + 17*4), 1), 0xffffff);
+            font.func_238418_a_(new TranslationTextComponent(selectedEntry.upgrade.getTranslationKey() + ".desc"), this.list.getRight() + 6 + 17*4, 32 + font.FONT_HEIGHT*2, Math.max( listViewX - 6 - (this.list.getRight() + 6 + 17*4), 1), 0xffffff);
             int listViewY = 32 + 20;
             int n = scrollOffset + 25;
-            this.renderRecipeBackground(mouseX, mouseY, listViewX, listViewY, n);
-            this.renderRecipeIcons(listViewX, listViewY, n);
+            this.renderRecipeBackground(matrixStack, mouseX, mouseY, listViewX, listViewY, n);
+            this.renderRecipeIcons(matrixStack, listViewX, listViewY, n);
         }
-        super.render(mouseX, mouseY, partialTick);
-        renderHoveredToolTip(mouseX, mouseY);
+        super.render(matrixStack, mouseX, mouseY, partialTick);
+        renderHoveredTooltip(matrixStack, mouseX, mouseY);
     }
 
     public void setSelected(AvailableUpgradeListEntry entry){
@@ -175,7 +177,7 @@ public class BannedUpgradesConfigScreen extends Screen {
         }
     }
 
-    private void renderRecipeBackground(int mouseX, int mouseY, int x, int y, int scrollOffset) {
+    private void renderRecipeBackground(MatrixStack matrixStack, int mouseX, int mouseY, int x, int y, int scrollOffset) {
 
         {
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -190,10 +192,10 @@ public class BannedUpgradesConfigScreen extends Screen {
             RenderSystem.defaultBlendFunc();
             RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
             this.getMinecraft().getTextureManager().bindTexture(UI_TEXTURE);
-            this.blit(x, y, 0, 60 + i, 100 / 2, 20);
-            this.blit(x + 100 / 2, y, 200 - 100 / 2, 60 + i, 100 / 2, 20);
+            this.blit(matrixStack, x, y, 0, 60 + i, 100 / 2, 20);
+            this.blit(matrixStack, x + 100 / 2, y, 200 - 100 / 2, 60 + i, 100 / 2, 20);
             int j = isBannedAll ? TextFormatting.RED.getColor() : TextFormatting.WHITE.getColor();
-            this.drawCenteredString(font, I18n.format("enhancedmachine.config.general.bannedUpgrades.full." + (isBannedAll ? "on" : "off")), x + 100 / 2, y + (20 - 8) / 2, j | 0xff000000);
+            this.drawCenteredString(matrixStack, font, I18n.format("enhancedmachine.config.general.bannedUpgrades.full." + (isBannedAll ? "on" : "off")), x + 100 / 2, y + (20 - 8) / 2, j | 0xff000000);
         }
 
         if(selectedEntry.upgrade.getMinLevel() != selectedEntry.upgrade.getMaxLevel())
@@ -213,12 +215,12 @@ public class BannedUpgradesConfigScreen extends Screen {
 
             this.getMinecraft().getTextureManager().bindTexture(UI_TEXTURE);
 
-            this.blit(k, m, textureX, textureY, 20, 20);
+            this.blit(matrixStack, k, m, textureX, textureY, 20, 20);
         }
 
     }
 
-    private void renderRecipeIcons(int x, int y, int scrollOffset) {
+    private void renderRecipeIcons(MatrixStack matrixStack, int x, int y, int scrollOffset) {
         if(selectedEntry.upgrade.getMinLevel() != selectedEntry.upgrade.getMaxLevel())
         for (int i = this.scrollOffset; i < scrollOffset && i < selectedEntry.upgrade.getMaxLevel(); ++i) {
             int j = i - this.scrollOffset;
@@ -228,9 +230,10 @@ public class BannedUpgradesConfigScreen extends Screen {
 //            this.getMinecraft().getItemRenderer().renderItemAndEffectIntoGUI(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), new UpgradeDetail(selectedEntry.upgrade, i + 1)), k, m);
 
             RenderSystem.enableAlphaTest();
-            MatrixStack matrixstack = new MatrixStack();
-            matrixstack.translate(0.0D, 0.0D, this.getMinecraft().getItemRenderer().zLevel + 200.0F);
-            ((FontRendererMixin)font).invokeRenderString("" + (i + 1), (float) (k - 2 + 20 - font.getStringWidth("" + (i + 1))), (float) (m - 2 + 21 - font.FONT_HEIGHT), 0xffffff, matrixstack.getLast().getMatrix(), true);
+            matrixStack.push();
+            matrixStack.translate(0.0D, 0.0D, this.getMinecraft().getItemRenderer().zLevel + 200.0F);
+            ((FontRendererMixin)font).invokeRenderString("" + (i + 1), (float) (k - 2 + 20 - font.getStringWidth("" + (i + 1))), (float) (m - 2 + 21 - font.FONT_HEIGHT), 0xffffff, matrixStack.getLast().getMatrix(), true, false);
+            matrixStack.pop();
         }
     }
 
@@ -313,9 +316,9 @@ public class BannedUpgradesConfigScreen extends Screen {
         }
 
         @Override
-        protected void renderBackground()
+        protected void renderBackground(MatrixStack matrixStack)
         {
-            this.parent.renderBackground();
+            this.parent.renderBackground(matrixStack);
         }
 
     }
@@ -335,10 +338,10 @@ public class BannedUpgradesConfigScreen extends Screen {
         }
 
         @Override
-        public void render(int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isSelected, float partialTicks) {
+        public void render(MatrixStack matrixStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isSelected, float partialTicks) {
             String name = I18n.format(upgrade.getTranslationKey());
             FontRenderer font = this.parent.font;
-            font.drawString(font.trimStringToWidth(name, entryWidth),left + 3, top + 2, 0xFFFFFF);
+            font.drawString(matrixStack, font.trimStringToWidth(name, entryWidth),left + 3, top + 2, 0xFFFFFF);
         }
 
         @Override

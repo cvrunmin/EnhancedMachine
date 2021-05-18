@@ -21,6 +21,7 @@
     "enhancedmachine.config.general.bannedUpgrades.on": "已禁止此升級",
     "enhancedmachine.config.general.bannedUpgrades.full.off": "升級: 已允許",
     "enhancedmachine.config.general.bannedUpgrades.full.on": "升級: 已禁用",
+    "gamerule.doLimitedChipMultiplier": "有效化芯片效率",
     "upgrade.type.empty": "空",
     "upgrade.type.empty.desc": "",
     "upgrade.type.intact": "完整",

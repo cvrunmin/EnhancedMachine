@@ -22,7 +22,9 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fml.client.gui.GuiUtils;
 
 import java.util.Arrays;
@@ -47,15 +49,15 @@ public class ChipWriterScreen extends ContainerScreen<ChipWriterContainer> {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
-        super.render(mouseX, mouseY, partialTicks);
-        if (subWriter != null) subWriter.render(mouseX, mouseY, partialTicks);
-        renderHoveredToolTip(mouseX, mouseY);
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        if (subWriter != null) subWriter.render(matrixStack, mouseX, mouseY, partialTicks);
+        renderHoveredTooltip(matrixStack, mouseX, mouseY);
     }
 
     @Override
-    protected void renderHoveredToolTip(int mouseX, int mouseY) {
-        super.renderHoveredToolTip(mouseX, mouseY);
+    protected void renderHoveredTooltip(MatrixStack matrixStack, int mouseX, int mouseY) {
+        super.renderHoveredTooltip(matrixStack, mouseX, mouseY);
         if (this.playerInventory.getItemStack().isEmpty()) {
             int listViewX = guiLeft + 73;
             int listViewY = guiTop + 15;
@@ -67,13 +69,13 @@ public class ChipWriterScreen extends ContainerScreen<ChipWriterContainer> {
                 int m = listViewY + l * 20;
                 if (mouseX >= k && mouseY >= m && mouseX < k + 20 && mouseY < m + 20) {
                     Tuple<UpgradeDetail, Integer> tuple = list.get(i);
-                    List<String> lines = Upgrades.writeUpgradeTooltip(tuple.getA()).stream().map(ITextComponent::getFormattedText).collect(Collectors.toList());
-                    lines.add(net.minecraft.client.resources.I18n.format("upgrade.applicable_block") + tuple.getA().getType().getSupportedBlocks().stream().map(blk -> I18n.format(blk.getTranslationKey())).collect(Collectors.joining(", ")));
+                    List<ITextComponent> lines = Upgrades.writeUpgradeTooltip(tuple.getA());
+                    lines.add(new TranslationTextComponent("upgrade.applicable_block").appendString(tuple.getA().getType().getSupportedBlocks().stream().map(blk -> I18n.format(blk.getTranslationKey())).collect(Collectors.joining(", "))));
                     if (playerInventory.player.experienceLevel < this.container.getAvailableRecipes().get(i).getB() && !this.playerInventory.player.isCreative()) {
-                        lines.add("");
-                        lines.add(TextFormatting.RED + net.minecraft.client.resources.I18n.format("container.enchant.level.requirement", tuple.getB()));
+                        lines.add(new StringTextComponent(""));
+                        lines.add(new TranslationTextComponent("container.enchant.level.requirement", tuple.getB()).mergeStyle(TextFormatting.RED));
                     }
-                    GuiUtils.drawHoveringText(lines, mouseX, mouseY, width, height, -1, font);
+                    GuiUtils.drawHoveringText(matrixStack, lines, mouseX, mouseY, width, height, -1, font);
                     break;
                 }
             }
@@ -81,37 +83,37 @@ public class ChipWriterScreen extends ContainerScreen<ChipWriterContainer> {
     }
 
     @Override
-    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        this.font.drawString(this.title.getFormattedText(), 8, 4, 0x404040);
+    protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int mouseX, int mouseY) {
+        this.font.drawString(matrixStack, this.title.getString(), 8, 4, 0x404040);
         if (subWriter == null) {
-            this.font.drawString(this.playerInventory.getDisplayName().getFormattedText(), 8, this.ySize - 94, 0x404040);
+            this.font.drawString(matrixStack, this.playerInventory.getDisplayName().getString(), 8, this.ySize - 94, 0x404040);
         }
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        this.renderBackground();
+    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+        this.renderBackground(matrixStack);
         if (subWriter == null) {
             RenderSystem.color4f(1f, 1f, 1f, 1f);
             this.minecraft.getTextureManager().bindTexture(UI_TEXTURE);
-            this.blit(guiLeft, guiTop, 0, 0, xSize, ySize);
+            this.blit(matrixStack, guiLeft, guiTop, 0, 0, xSize, ySize);
             int k = (int) (45 * scrollAmount);
-            this.blit(guiLeft + 156, guiTop + 15 + k, 176 + (shouldScroll() ? 0 : 12), 0, 12, 15);
+            this.blit(matrixStack, guiLeft + 156, guiTop + 15 + k, 176 + (shouldScroll() ? 0 : 12), 0, 12, 15);
             int listViewX = guiLeft + 73;
             int listViewY = guiTop + 15;
             int n = scrollOffset + 12;
-            this.renderRecipeBackground(mouseX, mouseY, listViewX, listViewY, n);
-            this.renderRecipeIcons(listViewX, listViewY, n);
+            this.renderRecipeBackground(matrixStack, mouseX, mouseY, listViewX, listViewY, n);
+            this.renderRecipeIcons(matrixStack, listViewX, listViewY, n);
         } else {
             RenderSystem.color4f(1f, 1f, 1f, 1f);
             this.minecraft.getTextureManager().bindTexture(UI_TEXTURE);
-            this.blit(guiLeft + 7, guiTop + 3, 7, 3, font.getStringWidth(title.getFormattedText()) + 1, 10);
-            this.blit(guiLeft + 11, guiTop + 14, 11, 14, 18, 18);
-            this.blit(guiLeft + 29 - 4, guiTop + 54 - 4, 29 - 4, 54 - 4, 26, 26);
+            this.blit(matrixStack, guiLeft + 7, guiTop + 3, 7, 3, font.getStringWidth(title.getString()) + 1, 10);
+            this.blit(matrixStack, guiLeft + 11, guiTop + 14, 11, 14, 18, 18);
+            this.blit(matrixStack, guiLeft + 29 - 4, guiTop + 54 - 4, 29 - 4, 54 - 4, 26, 26);
         }
     }
 
-    private void renderRecipeBackground(int mouseX, int mouseY, int x, int y, int scrollOffset) {
+    private void renderRecipeBackground(MatrixStack matrixStack, int mouseX, int mouseY, int x, int y, int scrollOffset) {
         for (int i = this.scrollOffset; i < scrollOffset && i < this.container.getAvailableRecipesCount(); ++i) {
             int j = i - this.scrollOffset;
             int k = x + j % 4 * 20;
@@ -127,12 +129,12 @@ public class ChipWriterScreen extends ContainerScreen<ChipWriterContainer> {
                 textureY += 40;
             }
 
-            this.blit(k, m, textureX, textureY, 20, 20);
+            this.blit(matrixStack, k, m, textureX, textureY, 20, 20);
         }
 
     }
 
-    private void renderRecipeIcons(int x, int y, int scrollOffset) {
+    private void renderRecipeIcons(MatrixStack matrixStack, int x, int y, int scrollOffset) {
         List<Tuple<UpgradeDetail, Integer>> list = this.container.getAvailableRecipes();
 
         for (int i = this.scrollOffset; i < scrollOffset && i < this.container.getAvailableRecipesCount(); ++i) {
@@ -142,19 +144,20 @@ public class ChipWriterScreen extends ContainerScreen<ChipWriterContainer> {
             int m = y + l * 20 + 2;
             this.getMinecraft().getItemRenderer().renderItemAndEffectIntoGUI(Upgrades.writeUpgrade(new ItemStack(EMItems.UPGRADE_CHIP.get()), list.get(i).getA()), k, m);
             int expLevel = list.get(i).getB();
-            renderRecipeIconsExperienceRequirement(k - 2, m - 2, expLevel, minecraft.player.experienceLevel >= expLevel || this.playerInventory.player.isCreative());
+            renderRecipeIconsExperienceRequirement(matrixStack, k - 2, m - 2, expLevel, minecraft.player.experienceLevel >= expLevel || this.playerInventory.player.isCreative());
         }
     }
 
-    private void renderRecipeIconsExperienceRequirement(int x, int y, int expLevel, boolean enough) {
+    private void renderRecipeIconsExperienceRequirement(MatrixStack matrixStack, int x, int y, int expLevel, boolean enough) {
         RenderSystem.disableLighting();
         RenderSystem.disableDepthTest();
         this.minecraft.getTextureManager().bindTexture(UI_TEXTURE);
-        this.blit(x, y, 40, ySize, 20, 20);
+        this.blit(matrixStack, x, y, 40, ySize, 20, 20);
         RenderSystem.disableBlend();
-        MatrixStack matrixstack = new MatrixStack();
-        matrixstack.translate(0.0D, 0.0D, (double)(this.getMinecraft().getItemRenderer().zLevel + 200.0F));
-        ((FontRendererMixin)font).invokeRenderString("" + expLevel, (float) (x + 20 - font.getStringWidth("" + expLevel)), (float) (y + 21 - font.FONT_HEIGHT), enough ? 0x00ef00 : 0xef0000, matrixstack.getLast().getMatrix(), true);
+        matrixStack.push();
+        matrixStack.translate(0.0D, 0.0D, (double)(this.getMinecraft().getItemRenderer().zLevel + 200.0F));
+        ((FontRendererMixin)font).invokeRenderString("" + expLevel, (float) (x + 20 - font.getStringWidth("" + expLevel)), (float) (y + 21 - font.FONT_HEIGHT), enough ? 0x00ef00 : 0xef0000, matrixStack.getLast().getMatrix(), true, false);
+        matrixStack.pop();
         RenderSystem.enableLighting();
         RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();
@@ -249,7 +252,7 @@ public class ChipWriterScreen extends ContainerScreen<ChipWriterContainer> {
         Slot inputSlot = container.getSlot(36);
         Slot outputSlot = container.getSlot(38);
         if (subWriter != null) {
-            addButton(new Button(guiLeft + outputSlot.xPos - 18, guiTop + outputSlot.yPos + 2, 12, 12, "-", but -> {
+            addButton(new Button(guiLeft + outputSlot.xPos - 18, guiTop + outputSlot.yPos + 2, 12, 12, new StringTextComponent("-"), but -> {
                 UpgradeDetail upgradeDetail = Upgrades.getUpgradeFromItemStack(inputSlot.getStack());
                 if (inputSlot.getHasStack() && Upgrades.RISER.equals(upgradeDetail.getType())) {
                     if (!Arrays.equals(subWriter.weights, upgradeDetail.getExtras().getIntArray("Weights"))) {
@@ -259,7 +262,7 @@ public class ChipWriterScreen extends ContainerScreen<ChipWriterContainer> {
                 closeRiserWeightWriting();
             }));
         } else if (inputSlot.getHasStack() && Upgrades.RISER.equals(Upgrades.getUpgradeFromItemStack(inputSlot.getStack()).getType())) {
-            addButton(new Button(guiLeft + outputSlot.xPos - 18, guiTop + outputSlot.yPos + 2, 12, 12, "+", but -> {
+            addButton(new Button(guiLeft + outputSlot.xPos - 18, guiTop + outputSlot.yPos + 2, 12, 12, new StringTextComponent("+"), but -> {
                 UpgradeDetail upgradeDetail = Upgrades.getUpgradeFromItemStack(inputSlot.getStack());
                 if (inputSlot.getHasStack() && Upgrades.RISER.equals(upgradeDetail.getType())) {
                     subWriter = new GuiRiserWeightsWriter(this, upgradeDetail);

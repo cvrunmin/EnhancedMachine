@@ -77,7 +77,7 @@ public abstract class BrewingStandTileEntityMixin extends TileEntity implements 
 //    }
 
     @Inject(method = "read", at = @At(value = "TAIL"))
-    public void afterReadNBT(CompoundNBT nbt, CallbackInfo info){
+    public void afterReadNBT(BlockState state, CompoundNBT nbt, CallbackInfo info){
         CapabilityUpgradeSlot.UPGRADE_SLOT.readNBT(upgradeSlot, null, nbt.getList("Upgrades", 10));
     }
 
@@ -103,7 +103,7 @@ public abstract class BrewingStandTileEntityMixin extends TileEntity implements 
     @Override
     public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
         super.onDataPacket(net, pkt);
-        handleUpdateTag(pkt.getNbtCompound());
+        handleUpdateTag(getWorld().getBlockState(pkt.getPos()), pkt.getNbtCompound());
     }
 
     public boolean hasFuel(){

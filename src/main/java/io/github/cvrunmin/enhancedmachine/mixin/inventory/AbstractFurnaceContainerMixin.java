@@ -9,6 +9,7 @@ import net.minecraft.inventory.container.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.AbstractCookingRecipe;
 import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.item.crafting.RecipeBookCategory;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.util.IIntArray;
 import org.spongepowered.asm.mixin.Final;
@@ -44,9 +45,9 @@ public abstract class AbstractFurnaceContainerMixin extends Container {
 //        return new Inventory(1 + 2 * 9);
 //    }
 
-    @Inject(method = "<init>(Lnet/minecraft/inventory/container/ContainerType;Lnet/minecraft/item/crafting/IRecipeType;ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;)V",
+    @Inject(method = "<init>(Lnet/minecraft/inventory/container/ContainerType;Lnet/minecraft/item/crafting/IRecipeType;Lnet/minecraft/item/crafting/RecipeBookCategory;ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/IInventory;Lnet/minecraft/util/IIntArray;)V",
     at = @At("RETURN"))
-    public void overrideConstructorSlots(ContainerType<?> containerTypeIn, IRecipeType<? extends AbstractCookingRecipe> recipeTypeIn, int id, PlayerInventory playerInventoryIn, IInventory furnaceInventoryIn, IIntArray furnaceDataIn,  CallbackInfo info){
+    public void overrideConstructorSlots(ContainerType<?> containerTypeIn, IRecipeType<? extends AbstractCookingRecipe> recipeTypeIn, RecipeBookCategory category, int id, PlayerInventory playerInventoryIn, IInventory furnaceInventoryIn, IIntArray furnaceDataIn, CallbackInfo info){
         if(!(furnaceInventoryIn instanceof AbstractFurnaceTileEntity) && furnaceInventory.getSizeInventory() == 3)
             furnaceInventoryIn = new Inventory(1 + 2 * 9);
         this.furnaceInventory = furnaceInventoryIn;

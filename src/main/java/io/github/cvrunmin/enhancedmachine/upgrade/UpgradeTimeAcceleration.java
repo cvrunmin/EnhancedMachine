@@ -9,6 +9,8 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.Items;
 import net.minecraft.item.Rarity;
 import net.minecraft.tileentity.BrewingStandTileEntity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,13 +40,13 @@ public class UpgradeTimeAcceleration extends Upgrade {
     }
 
     @Override
-    public List<String> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
-        List<String> list = new ArrayList<>();
+    public List<ITextComponent> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
+        List<ITextComponent> list = new ArrayList<>();
         if (cap.getHolder() instanceof BrewingStandTileEntity) {
-            list.add(I18n.format(getTranslationKey() + ".func.1.brewing_stand", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
-            list.add(I18n.format(getTranslationKey() + ".func.2.brewing_stand", I18n.format(Items.BLAZE_POWDER.getTranslationKey()), 100 - 100f / getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
+            list.add(new TranslationTextComponent(getTranslationKey() + ".func.1.brewing_stand", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
+            list.add(new TranslationTextComponent(getTranslationKey() + ".func.2.brewing_stand", I18n.format(Items.BLAZE_POWDER.getTranslationKey()), 100 - 100f / getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
         } else {
-            list.add(I18n.format(getTranslationKey() + ".func.1", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
+            list.add(new TranslationTextComponent(getTranslationKey() + ".func.1", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
 //            list.add(I18n.format(getTranslationKey() + ".func.2", 100 * getSpeedBoost(node.getUpgrade().getLevel()) * cap.getEffectMultiplier(node)));
         }
         return list;

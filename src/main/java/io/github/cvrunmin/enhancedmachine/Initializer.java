@@ -20,8 +20,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 @Mod.EventBusSubscriber(modid = EnhancedMachine.MODID)
 public class Initializer {
 //    public static final DeferredRegister<TileEntityType<?>> TILEENTITY = new DeferredRegister<>(ForgeRegistries.TILE_ENTITIES, EnhancedMachine.MODID);
-    public static final DeferredRegister<ContainerType<?>> CONTAINERS = new DeferredRegister<>(ForgeRegistries.CONTAINERS, EnhancedMachine.MODID);
-    public static final DeferredRegister<IRecipeSerializer<?>> RECIPE_SERIALIZER = new DeferredRegister<>(ForgeRegistries.RECIPE_SERIALIZERS, EnhancedMachine.MODID);
+    public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS, EnhancedMachine.MODID);
+    public static final DeferredRegister<IRecipeSerializer<?>> RECIPE_SERIALIZER = DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, EnhancedMachine.MODID);
 
     public static RegistryObject<ContainerType<ChipWriterContainer>> chipWriterContainer = CONTAINERS.register("chipwriter", ()->{
         return IForgeContainerType.create(((windowId, inv, data) -> new ChipWriterContainer(windowId, inv)));

@@ -15,7 +15,9 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.tileentity.DispenserTileEntity;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,33 +74,33 @@ public class SlotUpgradeChip extends Slot {
         return false;
     }
 
-    public List<String> getInstalledChipTooltips() {
-        List<String> list = new ArrayList<>();
-        list.add(I18n.format("upgrade.status.multiplier", cap.getEffectMultiplier(upgradeSlot) * 100));
+    public List<ITextComponent> getInstalledChipTooltips() {
+        List<ITextComponent> list = new ArrayList<>();
+        list.add(new TranslationTextComponent("upgrade.status.multiplier", cap.getEffectMultiplier(upgradeSlot) * 100));
         if(EMConfig.isBanned(upgradeSlot.getUpgrade(), ServerConfigHelper.getSyncBannedUpgrade())){
 //            list.add(TextFormatting.RED + I18n.format("enhancedmachine.config.general.bannedUpgrades.on"));
         }
         else {
             if (upgradeSlot instanceof SplitUpgradeNode && ((SplitUpgradeNode) upgradeSlot).getChildren().stream().anyMatch(node -> node != null && !node.getUpgrade().getType().equals(Upgrades.EMPTY))) {
-                list.add(TextFormatting.RED + I18n.format("upgrade.warning.containsChildren"));
+                list.add(new TranslationTextComponent("upgrade.warning.containsChildren").mergeStyle(TextFormatting.RED));
             } else if (Upgrades.HYPERTHREAD.equals(upgradeSlot.getUpgrade().getType())) {
                 if (isHyperthreadSlotOccupied()) {
-                    list.add(TextFormatting.RED + I18n.format("upgrade.warning.featureSlotsOccupied"));
+                    list.add(new TranslationTextComponent("upgrade.warning.featureSlotsOccupied").mergeStyle(TextFormatting.RED));
                 }
             }
             Block block = cap.getHolder().getBlockState().getBlock();
             boolean noFunc = !upgradeSlot.getUpgrade().getType().getSupportedBlocks().isEmpty() && !upgradeSlot.getUpgrade().getType().getSupportedBlocks().contains(block);
             if (noFunc) {
-                list.add(TextFormatting.YELLOW + I18n.format("upgrade.warning.no_function", I18n.format(block.getTranslationKey())));
+                list.add(new TranslationTextComponent("upgrade.warning.no_function", I18n.format(block.getTranslationKey())).mergeStyle(TextFormatting.YELLOW));
             } else if (!Upgrades.RISER.equals(upgradeSlot.getUpgrade().getType())) {
                 UpgradeNode firstFoundUpgrade = cap.getFirstFoundUpgrade(upgradeSlot.getUpgrade().getType());
                 if (firstFoundUpgrade != null && !firstFoundUpgrade.equals(upgradeSlot)) {
                     int foundDepth = UpgradesCollection.getDepth(firstFoundUpgrade);
                     int myDepth = UpgradesCollection.getDepth(upgradeSlot);
                     if (foundDepth != myDepth) {
-                        list.add(TextFormatting.YELLOW + I18n.format("upgrade.warning.not_active"));
+                        list.add(new TranslationTextComponent("upgrade.warning.not_active").mergeStyle(TextFormatting.YELLOW));
                     } else {
-                        list.add(TextFormatting.YELLOW + I18n.format("upgrade.warning.not_active_same_level"));
+                        list.add(new TranslationTextComponent("upgrade.warning.not_active_same_level").mergeStyle(TextFormatting.YELLOW));
                     }
                 } else {
                     list.addAll(upgradeSlot.getUpgrade().getType().computeFunctionTooltips(upgradeSlot, cap));

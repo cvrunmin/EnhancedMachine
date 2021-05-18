@@ -1,6 +1,5 @@
 package io.github.cvrunmin.enhancedmachine.mixin;
 
-import com.mojang.brigadier.arguments.BoolArgumentType;
 import io.github.cvrunmin.enhancedmachine.EnhancedMachine;
 import io.github.cvrunmin.enhancedmachine.network.UpdateLimitedMultiplierMessage;
 import net.minecraft.world.GameRules;
@@ -15,8 +14,8 @@ public class GameRulesMixin {
 
     @Inject(method = "<clinit>", at = @At("TAIL"))
     private static void registerModRules(CallbackInfo info){
-        EnhancedMachine.DO_LIMITED_CHIP_MULTIPLIER = GameRules.register("doLimitedChipMultiplier", GameRuleTypeInvoker.createRuleType(BoolArgumentType::bool, type -> new GameRules.BooleanValue(type, true), (minecraftServer, value) -> {
-            EnhancedMachine.CHANNEL.send(PacketDistributor.ALL.noArg(), new UpdateLimitedMultiplierMessage(((GameRules.BooleanValue) value).get()));
+        EnhancedMachine.DO_LIMITED_CHIP_MULTIPLIER = GameRules.register("doLimitedChipMultiplier", GameRules.Category.PLAYER, GameRuleTypeInvoker.invokeCreate(true, (minecraftServer, value) -> {
+            EnhancedMachine.CHANNEL.send(PacketDistributor.ALL.noArg(), new UpdateLimitedMultiplierMessage(value.get()));
         }));
     }
 }

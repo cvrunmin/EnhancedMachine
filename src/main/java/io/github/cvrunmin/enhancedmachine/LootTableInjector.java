@@ -1,13 +1,17 @@
 package io.github.cvrunmin.enhancedmachine;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
 import io.github.cvrunmin.enhancedmachine.upgrade.UpgradeDetail;
 import io.github.cvrunmin.enhancedmachine.upgrade.Upgrades;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.storage.loot.*;
-import net.minecraft.world.storage.loot.conditions.ILootCondition;
-import net.minecraft.world.storage.loot.functions.ILootFunction;
-import net.minecraft.world.storage.loot.functions.SetNBT;
+import net.minecraft.loot.*;
+import net.minecraft.loot.conditions.ILootCondition;
+import net.minecraft.loot.functions.ILootFunction;
+import net.minecraft.loot.functions.SetNBT;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraftforge.event.LootTableLoadEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -140,6 +144,18 @@ public class LootTableInjector {
 
     static class CustomSetNBT extends LootFunction{
 
+        public static LootFunctionType CUSTOM_SET_NBT = Registry.register(Registry.LOOT_FUNCTION_TYPE, new ResourceLocation(EnhancedMachine.MODID, "custom_set_nbt"), new LootFunctionType(new ILootSerializer<ILootFunction>() {
+            @Override
+            public void serialize(JsonObject p_230424_1_, ILootFunction p_230424_2_, JsonSerializationContext p_230424_3_) {
+
+            }
+
+            @Override
+            public ILootFunction deserialize(JsonObject p_230423_1_, JsonDeserializationContext p_230423_2_) {
+                return builder().build();
+            }
+        }));
+
         public CustomSetNBT(ILootCondition[] conditionsIn) {
             super(conditionsIn);
         }
@@ -147,6 +163,11 @@ public class LootTableInjector {
         @Override
         protected ItemStack doApply(ItemStack stack, LootContext context) {
             return Upgrades.writeUpgrade(stack, new UpgradeDetail(Upgrades.DAMAGED, context.getRandom().nextInt(10) + 1));
+        }
+
+        @Override
+        public LootFunctionType getFunctionType() {
+            return CUSTOM_SET_NBT;
         }
 
         static LootFunction.Builder<?> builder() {

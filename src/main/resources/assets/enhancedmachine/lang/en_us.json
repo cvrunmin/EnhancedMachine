@@ -21,6 +21,7 @@
     "enhancedmachine.config.general.bannedUpgrades.on": "This upgrade is banned",
     "enhancedmachine.config.general.bannedUpgrades.full.off": "Upgrade: Allowed",
     "enhancedmachine.config.general.bannedUpgrades.full.on": "Upgrade: Banned",
+    "gamerule.doLimitedChipMultiplier": "Effective chip efficiency",
     "upgrade.type.empty": "Empty",
     "upgrade.type.empty.desc": "",
     "upgrade.type.intact": "Intact",

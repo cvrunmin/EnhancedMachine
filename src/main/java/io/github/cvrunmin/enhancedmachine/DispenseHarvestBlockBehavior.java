@@ -22,11 +22,11 @@ public class DispenseHarvestBlockBehavior extends OptionalDispenseBehavior {
     @Override
     public ItemStack dispenseStack(IBlockSource source, ItemStack stack) {
         World world = source.getWorld();
-        this.successful = true;
+        setSuccessful(true);
         DispenserTileEntity te = source.getBlockTileEntity();
         LazyOptional<IUpgradeSlot> optional = te.getCapability(CapabilityUpgradeSlot.UPGRADE_SLOT);
         if(!optional.isPresent()){
-            this.successful = false;
+            setSuccessful(false);
             return stack;
         }
         IUpgradeSlot capability = optional.orElseThrow(NullPointerException::new);
@@ -43,12 +43,12 @@ public class DispenseHarvestBlockBehavior extends OptionalDispenseBehavior {
             d++;
         } while (d < allowedDistance && world.isAirBlock(frontPos));
         if (d >= allowedDistance && world.isAirBlock(frontPos)) {
-            this.successful = false;
+            setSuccessful(false);
             return stack;
         }
         BlockState blockstate = world.getBlockState(frontPos);
         if (blockstate.getBlockHardness(world, frontPos) != -1
-                && ForgeHooks.canToolHarvestBlock(world, frontPos, stack)) {
+                && ForgeHooks.isToolEffective(world, frontPos, stack)) {
             world.destroyBlock(frontPos, false);
 //            Block.spawnDrops(blockstate, world, frontPos, null, null, stack);
 
@@ -58,12 +58,12 @@ public class DispenseHarvestBlockBehavior extends OptionalDispenseBehavior {
                 });
             }
 
-            blockstate.spawnAdditionalDrops(world, frontPos, stack);
+//            blockstate.spawnAdditionalDrops(world, frontPos, stack);
             if (stack.attemptDamageItem(1, world.rand, null)) {
                 stack.shrink(1);
             }
         } else {
-            successful = false;
+            setSuccessful(false);
         }
         return stack;
     }

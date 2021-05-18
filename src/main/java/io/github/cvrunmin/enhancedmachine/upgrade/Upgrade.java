@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Rarity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.text.ITextComponent;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,7 +63,7 @@ public class Upgrade {
         return GENERAL_BLOCK_SUPPORTED_LIST;
     }
 
-    public List<String> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
+    public List<ITextComponent> computeFunctionTooltips(UpgradeNode node, IUpgradeSlot cap) {
         return Collections.emptyList();
     }
 

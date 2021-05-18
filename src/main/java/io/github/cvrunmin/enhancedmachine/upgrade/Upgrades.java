@@ -5,10 +5,7 @@ import io.github.cvrunmin.enhancedmachine.ServerConfigHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.*;
 import net.minecraft.world.World;
 
 import java.util.*;
@@ -126,10 +123,10 @@ public final class Upgrades {
         lores.add(new StringTextComponent(""));
         lores.addAll(writeUpgradeTooltip(upgradeDetail));
         if(EMConfig.isBanned(upgradeDetail, worldIn != null && worldIn.isRemote ? ServerConfigHelper.getSyncBannedUpgrade() : EMConfig.getBannedUpgradesParsed())){
-            lores.add(new TranslationTextComponent("enhancedmachine.config.general.bannedUpgrades.on").applyTextStyle(TextFormatting.RED));
+            lores.add(new TranslationTextComponent("enhancedmachine.config.general.bannedUpgrades.on").mergeStyle(TextFormatting.RED));
         }
         else{
-            lores.add(new TranslationTextComponent("upgrade.applicable_block").appendText(type.getSupportedBlocks().stream().map(blk -> I18n.format(blk.getTranslationKey())).collect(Collectors.joining(", "))));
+            lores.add(new TranslationTextComponent("upgrade.applicable_block").appendString(type.getSupportedBlocks().stream().map(blk -> I18n.format(blk.getTranslationKey())).collect(Collectors.joining(", "))));
         }
     }
 
@@ -139,14 +136,14 @@ public final class Upgrades {
         TextFormatting descriptiveColor = getDescriptiveColor(type);
         List<ITextComponent> lores = new ArrayList<>();
         lores.add(getUpgradeFullTitle(upgradeDetail));
-        lores.add(new TranslationTextComponent("upgrade.type." + type.getUpgradeName() + ".desc").applyTextStyle(descriptiveColor));
+        lores.add(new TranslationTextComponent("upgrade.type." + type.getUpgradeName() + ".desc").mergeStyle(descriptiveColor));
         return lores;
     }
 
     public static ITextComponent getUpgradeFullTitle(UpgradeDetail detail) {
         Upgrade type = detail.getType();
         TextFormatting descriptiveColor = getDescriptiveColor(type);
-        ITextComponent textComponent = new TranslationTextComponent("upgrade.type." + type.getUpgradeName()).applyTextStyle(descriptiveColor);
+        IFormattableTextComponent textComponent = new TranslationTextComponent("upgrade.type." + type.getUpgradeName()).mergeStyle(descriptiveColor);
         if (type.getMaxLevel() > type.getMinLevel()) {
             int level = detail.getLevel();
             TextFormatting levelColor;
@@ -157,7 +154,7 @@ public final class Upgrades {
             } else {
                 levelColor = TextFormatting.BLUE;
             }
-            textComponent.appendText(" ").appendSibling(new TranslationTextComponent("upgrade.level", level).applyTextStyle(levelColor));
+            textComponent.appendString(" ").appendSibling(new TranslationTextComponent("upgrade.level", level).mergeStyle(levelColor));
         }
         return textComponent;
     }
